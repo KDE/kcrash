@@ -33,7 +33,7 @@
 #include <string.h>
 #endif
 
-KCRASH_EXPORT unsigned long strlcpy(char* d, const char* s, unsigned long bufsize)
+KCRASH_EXPORT unsigned long strlcpy(char *d, const char *s, unsigned long bufsize)
 {
     unsigned long len, ret = strlen(s);
 
@@ -43,8 +43,9 @@ KCRASH_EXPORT unsigned long strlcpy(char* d, const char* s, unsigned long bufsiz
             memcpy(d, s, len);
             d[len] = '\0';
         }
-    } else
+    } else {
         memcpy(d, s, ret + 1);
+    }
 
     return ret;
 }
