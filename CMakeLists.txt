@@ -16,6 +16,7 @@ set(HAVE_X11 ${X11_FOUND})
 
 include(FeatureSummary)
 include(ECMSetupVersion)
+include(ECMGenerateHeaders)
 
 set(KF5_VERSION "5.0.0")
 ecm_setup_version(${KF5_VERSION} VARIABLE_PREFIX KCrash
