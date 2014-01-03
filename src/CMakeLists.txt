@@ -25,7 +25,7 @@ add_library(KF5Crash ${kcrash_SRCS})
 generate_export_header(KF5Crash BASE_NAME KCrash)
 add_library(KF5::Crash ALIAS KF5Crash)
 
-target_include_directories(KF5Crash INTERFACE "$<INSTALL_INTERFACE:${INCLUDE_INSTALL_DIR}/kcrash>" "$<INSTALL_INTERFACE:${INCLUDE_INSTALL_DIR}/KCrash>")
+target_include_directories(KF5Crash INTERFACE "$<INSTALL_INTERFACE:${INCLUDE_INSTALL_DIR}/KCrash>")
 
 target_link_libraries(KF5Crash PUBLIC Qt5::Core)
 target_link_libraries(KF5Crash PRIVATE KF5::CoreAddons KF5::WindowSystem Qt5::Gui)
@@ -54,5 +54,5 @@ install(TARGETS KF5Crash EXPORT KF5CrashTargets ${INSTALL_TARGETS_DEFAULT_ARGS})
 install(FILES
   ${CMAKE_CURRENT_BINARY_DIR}/kcrash_export.h
   ${KCrash_HEADERS}
-  DESTINATION ${INCLUDE_INSTALL_DIR}/kcrash COMPONENT Devel
+  DESTINATION ${INCLUDE_INSTALL_DIR}/KCrash COMPONENT Devel
 )
