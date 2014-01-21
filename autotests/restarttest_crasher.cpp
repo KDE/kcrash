@@ -29,7 +29,11 @@ int main(int argc, char **argv)
 {
     QApplication app(argc, argv);
 
-    KCrash::setFlags(KCrash::AutoRestart | KCrash::AlwaysDirectly);
+    const QStringList args = app.arguments();
+    QByteArray flag = args.count() > 1 ? args.at(1).toLatin1() : QByteArray();
+    // we could use this flag in the future to test more features
+
+    KCrash::setFlags(KCrash::AutoRestart);
 
 #ifdef Q_OS_UNIX
     // No core file
@@ -45,12 +49,16 @@ int main(int argc, char **argv)
     if (!output.open(QIODevice::WriteOnly | QIODevice::Append))
         return 1;
     if (qgetenv("KCRASH_AUTO_RESTARTED").isEmpty()) {
-        output.write("starting\n");
+        output.write("starting ");
+        output.write(flag);
+        output.write("\n");
         output.close();
         // CRASH!
         delete (char*)0xdead;
     } else {
-        output.write("autorestarted\n");
+        output.write("autorestarted ");
+        output.write(flag);
+        output.write("\n");
         output.close();
     }
 

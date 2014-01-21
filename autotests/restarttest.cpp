@@ -21,6 +21,7 @@
 #include <QFile>
 #include <QTest>
 #include <QSignalSpy>
+#include <QDebug>
 
 class RestartTest : public QObject
 {
@@ -57,12 +58,14 @@ void RestartTest::testAutoRestart()
     QVERIFY(QFile::exists("./restarttest_crasher"));
     processName = "./restarttest_crasher";
 #endif
-//     qDebug() << proc.args();
-    proc.start(processName);
+    //qDebug() << proc.args();
+    proc.start(processName, QStringList() << "1");
     bool ok = proc.waitForFinished();
     QVERIFY(ok);
 
-    QTRY_COMPARE(checkRestartLog().constData(), "starting\nautorestarted\n");
+    //qDebug() << proc.readAllStandardError();
+
+    QTRY_COMPARE(checkRestartLog().constData(), "starting 1\nautorestarted 1\n");
 }
 
 QTEST_MAIN(RestartTest)
