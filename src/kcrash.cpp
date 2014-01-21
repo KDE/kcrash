@@ -107,7 +107,7 @@ static void kcrashInitialize()
     }
     const QStringList args = QCoreApplication::arguments();
     if (qgetenv("KDE_DEBUG").isEmpty()
-            && !args.contains(QStringLiteral("--nocrashhandler"))) {
+        && qgetenv("KCRASH_AUTO_RESTARTED").isEmpty()) {
         // enable drkonqi
         KCrash::setDrKonqiEnabled(true);
     }
@@ -148,7 +148,7 @@ KCrash::emergencySaveFunction()
 
 // Set the default crash handler in 10 seconds
 // This is used after an autorestart, the second instance of the application
-// is started with --nocrashhandler (no drkonqi, more precisely), and we
+// is started with KCRASH_AUTO_RESTARTED=1, and we
 // set the defaultCrashHandler (to handle autorestart) after 10s.
 // The delay is to see if we stay up for more than 10s time, to avoid infinite
 // respawning if the app crashes on startup.
@@ -177,9 +177,9 @@ KCrash::setFlags(KCrash::CrashFlags flags)
     if (s_flags & AutoRestart) {
         // We need at least the default crash handler for autorestart to work.
         if (!s_crashHandler) {
-            if (QCoreApplication::arguments().contains(QStringLiteral("--nocrashhandler"))) { // --nocrashhandler was passed, probably due to a crash, delay restart handler
+            if (!qgetenv("KCRASH_AUTO_RESTARTED").isEmpty()) {
                 new KCrashDelaySetHandler;
-            } else { // probably because KDE_DEBUG=1. set restart handler immediately.
+            } else {
                 setCrashHandler(defaultCrashHandler);
             }
         }
@@ -201,9 +201,6 @@ void KCrash::setApplicationFilePath(const QString &filePath)
 
     QStringList args = QCoreApplication::arguments();
     args[0] = filePath; // replace argv[0] with full path above
-    if (!args.contains(QStringLiteral("--nocrashhandler"))) {
-        args.insert(1, QStringLiteral("--nocrashhandler"));
-    }
     delete[] s_autoRestartCommandLine;
     s_autoRestartArgc = args.count();
     s_autoRestartCommandLine = new char *[args.count() + 1];
@@ -220,7 +217,7 @@ void KCrash::setDrKonqiEnabled(bool enabled)
         s_drkonqiPath = qstrdup(CMAKE_INSTALL_PREFIX "/" LIBEXEC_INSTALL_DIR "/drkonqi");
         if (!QFile::exists(QLatin1String(s_drkonqiPath))) {
             qWarning() << "Could not find drkonqi at" << s_drkonqiPath;
-            s_launchDrKonqi = false;
+            s_launchDrKonqi = 0;
         }
     }
 
@@ -366,7 +363,7 @@ KCrash::defaultCrashHandler(int sig)
                 s_appName ? s_appName : "<unknown>");
 #endif
 
-        if (!s_launchDrKonqi) {
+        if (s_launchDrKonqi != 1) {
             setCrashHandler(0);
 #if !defined(Q_OS_WIN)
             raise(sig); // dump core, or whatever is the default action for this signal.
@@ -598,7 +595,7 @@ static pid_t startFromKdeinit(int argc, const char *argv[])
     kcrash_launcher_header header;
     header.cmd = LAUNCHER_EXEC_NEW;
     const int BUFSIZE = 8192; // make sure this is big enough
-    char buffer[ BUFSIZE + 10 ];
+    char buffer[ BUFSIZE + 10 + 24 /*the env var*/ ];
     int pos = 0;
     long argcl = argc;
     memcpy(buffer + pos, &argcl, sizeof(argcl));
@@ -614,9 +611,15 @@ static pid_t startFromKdeinit(int argc, const char *argv[])
         memcpy(buffer + pos, argv[ i ], len);
         pos += len;
     }
-    long env = 0;
+
+    long env = 1; // 1 env var
     memcpy(buffer + pos, &env, sizeof(env));
     pos += sizeof(env);
+    static const char s_envVar[] = "KCRASH_AUTO_RESTARTED=1";
+    int len = strlen(s_envVar) + 1;
+    memcpy(buffer + pos, s_envVar, len);
+    pos += len;
+
     long avoid_loops = 0;
     memcpy(buffer + pos, &avoid_loops, sizeof(avoid_loops));
     pos += sizeof(avoid_loops);
@@ -644,6 +647,7 @@ static pid_t startDirectly(const char *argv[])
             _exit(253);    // This cannot happen. Theoretically.
         }
         closeAllFDs(); // We are in the child now. Close FDs unconditionally.
+        setenv("KCRASH_AUTO_RESTARTED", "1", 1);
         execvp(argv[0], const_cast< char ** >(argv));
         fprintf(stderr, "KCrash failed to exec(), errno = %d\n", errno);
         _exit(253);
