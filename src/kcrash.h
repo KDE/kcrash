@@ -121,20 +121,6 @@ Q_DECLARE_FLAGS(CrashFlags, CrashFlag)
 KCRASH_EXPORT void setFlags(CrashFlags flags);
 
 /**
- * Sets the application @p path which should be passed to
- * DrKonqi, our nice crash display application.
- * @param path the application path
- */
-KCRASH_EXPORT void setApplicationPath(const QString &path);
-
-/**
- * Sets the application @p name which should be passed to
- * DrKonqi, our nice crash display application.
- * @param name the name of the application, as shown in DrKonqi
- */
-KCRASH_EXPORT void setApplicationName(const QString &name);
-
-/**
  * Enables or disables launching DrKonqi from the crash handler.
  * By default, launching DrKonqi is enabled when QCoreApplication is created.
  * To disable it:

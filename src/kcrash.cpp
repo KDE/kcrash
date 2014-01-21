@@ -85,6 +85,7 @@ typedef struct {
 namespace KCrash
 {
 KCRASH_EXPORT bool loadedByKdeinit = false;
+void setApplicationFilePath(const QString &filePath);
 }
 
 static KCrash::HandlerType s_emergencySaveFunction = 0;
@@ -111,18 +112,13 @@ static void kcrashInitialize()
         KCrash::setDrKonqiEnabled(true);
     }
 
-    // Always set the app name, can be usefuls for apps that call setEmergencySaveFunction or enable AutoRestart
-    const QString appPath = args[0];
-    const QString appName = appPath.mid(appPath.lastIndexOf(QLatin1Char('/')));
-    KCrash::setApplicationName(appName);
-    if (!QCoreApplication::applicationDirPath().isEmpty()) {
-        KCrash::setApplicationPath(QCoreApplication::applicationDirPath());
-    }
+    KCrash::setApplicationFilePath(QCoreApplication::applicationFilePath());
 }
 Q_COREAPP_STARTUP_FUNCTION(kcrashInitialize)
 
 namespace KCrash
 {
+void setApplicationFilePath(const QString &filePath);
 void startProcess(int argc, const char *argv[], bool waitAndExit);
 
 #if defined(Q_OS_WIN)
@@ -181,7 +177,7 @@ KCrash::setFlags(KCrash::CrashFlags flags)
     if (s_flags & AutoRestart) {
         // We need at least the default crash handler for autorestart to work.
         if (!s_crashHandler) {
-            if (!QCoreApplication::arguments().contains(QStringLiteral("--nocrashhandler"))) { // --nocrashhandler was passed, probably due to a crash, delay restart handler
+            if (QCoreApplication::arguments().contains(QStringLiteral("--nocrashhandler"))) { // --nocrashhandler was passed, probably due to a crash, delay restart handler
                 new KCrashDelaySetHandler;
             } else { // probably because KDE_DEBUG=1. set restart handler immediately.
                 setCrashHandler(defaultCrashHandler);
@@ -190,22 +186,21 @@ KCrash::setFlags(KCrash::CrashFlags flags)
     }
 }
 
-//### KDE5:Consider merging the setApplicationPath and setApplicationName methods into one.
-void
-KCrash::setApplicationPath(const QString &path)
+void KCrash::setApplicationFilePath(const QString &filePath)
 {
-    s_appPath = qstrdup(QFile::encodeName(path).constData());
+    const int pos = filePath.lastIndexOf(QLatin1Char('/'));
+    const QString appName = filePath.mid(pos + 1);
+    const QString appPath = filePath.left(pos); // could be empty, in theory
 
-    //if the appName has also been specified, update s_autoRestartCommand to be in the form "absolutePath/appName"
-    if (s_appName) {
-        delete[] s_autoRestartCommand;
-        QFileInfo appExecutable(QDir(path), QFile::decodeName(s_appName));
-        QByteArray cmd = QFile::encodeName(appExecutable.absoluteFilePath());
-        s_autoRestartCommand = qstrdup(cmd.constData());
-    }
+    s_appName = qstrdup(QFile::encodeName(appName).constData());
+    s_appPath = qstrdup(QFile::encodeName(appPath).constData());
+
+    // Prepare the auto-restart command
+    delete[] s_autoRestartCommand;
+    s_autoRestartCommand = qstrdup(QFile::encodeName(filePath).constData());
 
     QStringList args = QCoreApplication::arguments();
-    args[0] = QLatin1String(s_autoRestartCommand); // replace argv[0] with full path above
+    args[0] = filePath; // replace argv[0] with full path above
     if (!args.contains(QStringLiteral("--nocrashhandler"))) {
         args.insert(1, QStringLiteral("--nocrashhandler"));
     }
@@ -216,24 +211,6 @@ KCrash::setApplicationPath(const QString &path)
         s_autoRestartCommandLine[i] = qstrdup(QFile::encodeName(args.at(i)).constData());
     }
     s_autoRestartCommandLine[args.count()] = 0;
-}
-
-void
-KCrash::setApplicationName(const QString &name)
-{
-    s_appName = qstrdup(QFile::encodeName(name).constData());
-
-    //update the autoRestartCommand
-    delete[] s_autoRestartCommand;
-    if (s_appPath) {
-        //if we have appPath, make autoRestartCommand be in the form "absolutePath/appName"...
-        QFileInfo appExecutable(QDir(QFile::decodeName(s_appPath)), name);
-        QByteArray cmd = QFile::encodeName(appExecutable.absoluteFilePath());
-        s_autoRestartCommand = qstrdup(cmd.constData());
-    } else {
-        //...else just use the appName for the autoRestartCommand
-        s_autoRestartCommand = qstrdup(s_appName);
-    }
 }
 
 void KCrash::setDrKonqiEnabled(bool enabled)
