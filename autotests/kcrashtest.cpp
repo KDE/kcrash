@@ -23,11 +23,11 @@
 #include <QSignalSpy>
 #include <QDebug>
 
-class RestartTest : public QObject
+class KCrashTest : public QObject
 {
     Q_OBJECT
 public:
-    RestartTest() {}
+    KCrashTest() {}
 
 private Q_SLOTS:
     void testAutoRestart();
@@ -35,7 +35,7 @@ private Q_SLOTS:
 
 };
 
-static const char s_logFileName[] = "restarttest_log";
+static const char s_logFileName[] = "kcrashtest_log";
 
 static QByteArray readLogFile()
 {
@@ -53,11 +53,11 @@ static void startCrasher(const QByteArray &flag, const QByteArray &expectedOutpu
     QProcess proc;
     QString processName;
 #ifdef Q_OS_WIN
-    QVERIFY(QFile::exists("./restarttest_crasher.exe"));
-    processName = "restarttest_crasher.exe";
+    QVERIFY(QFile::exists("./test_crasher.exe"));
+    processName = "test_crasher.exe";
 #else
-    QVERIFY(QFile::exists("./restarttest_crasher"));
-    processName = "./restarttest_crasher";
+    QVERIFY(QFile::exists("./test_crasher"));
+    processName = "./test_crasher";
 #endif
     //qDebug() << proc.args();
     proc.start(processName, QStringList() << flag);
@@ -76,16 +76,16 @@ static void startCrasher(const QByteArray &flag, const QByteArray &expectedOutpu
     QCOMPARE(QString(logData), QString(expectedOutput));
 }
 
-void RestartTest::testAutoRestart()
+void KCrashTest::testAutoRestart()
 {
     startCrasher("AR", "starting AR\nautorestarted AR\n");
 }
 
-void RestartTest::testEmergencySave()
+void KCrashTest::testEmergencySave()
 {
     startCrasher("ES", "starting ES\nsaveFunction called\n");
 }
 
-QTEST_MAIN(RestartTest)
+QTEST_MAIN(KCrashTest)
 
-#include "restarttest.moc"
+#include "kcrashtest.moc"
