@@ -25,15 +25,26 @@
 #include <sys/resource.h> // setrlimit
 #endif
 
+QFile output;
+
+void saveFunction(int)
+{
+    output.write("saveFunction called\n");
+    output.flush();
+}
+
 int main(int argc, char **argv)
 {
     QApplication app(argc, argv);
 
     const QStringList args = app.arguments();
     QByteArray flag = args.count() > 1 ? args.at(1).toLatin1() : QByteArray();
-    // we could use this flag in the future to test more features
 
-    KCrash::setFlags(KCrash::AutoRestart);
+    if (flag == "AR") { // auto restart
+        KCrash::setFlags(KCrash::AutoRestart);
+    } else if (flag == "ES") { // emergency save
+        KCrash::setEmergencySaveFunction(saveFunction);
+    }
 
 #ifdef Q_OS_UNIX
     // No core file
@@ -45,14 +56,14 @@ int main(int argc, char **argv)
     }
 #endif
 
-    QFile output("restarttest_log");
+    output.setFileName("restarttest_log");
     if (!output.open(QIODevice::WriteOnly | QIODevice::Append))
         return 1;
     if (qgetenv("KCRASH_AUTO_RESTARTED").isEmpty()) {
         output.write("starting ");
         output.write(flag);
         output.write("\n");
-        output.close();
+        output.flush();
         // CRASH!
         delete (char*)0xdead;
     } else {

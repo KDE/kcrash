@@ -31,12 +31,13 @@ public:
 
 private Q_SLOTS:
     void testAutoRestart();
+    void testEmergencySave();
 
 };
 
 static const char s_logFileName[] = "restarttest_log";
 
-static QByteArray checkRestartLog()
+static QByteArray readLogFile()
 {
     QFile logFile(QFile::encodeName(s_logFileName));
     if (!logFile.open(QIODevice::ReadOnly)) {
@@ -45,7 +46,7 @@ static QByteArray checkRestartLog()
     return logFile.readAll();
 }
 
-void RestartTest::testAutoRestart()
+static void startCrasher(const QByteArray &flag, const QByteArray &expectedOutput)
 {
     QFile::remove(QFile::encodeName(s_logFileName));
 
@@ -59,13 +60,30 @@ void RestartTest::testAutoRestart()
     processName = "./restarttest_crasher";
 #endif
     //qDebug() << proc.args();
-    proc.start(processName, QStringList() << "1");
+    proc.start(processName, QStringList() << flag);
     bool ok = proc.waitForFinished();
     QVERIFY(ok);
 
-    //qDebug() << proc.readAllStandardError();
+    QByteArray logData;
+    for (int i = 0; i < 50; ++i) {
+        logData = readLogFile();
+        if (logData == expectedOutput) {
+            return;
+        }
+        QTest::qSleep(100);
+    }
+    qDebug() << proc.readAllStandardError();
+    QCOMPARE(QString(logData), QString(expectedOutput));
+}
 
-    QTRY_COMPARE(checkRestartLog().constData(), "starting 1\nautorestarted 1\n");
+void RestartTest::testAutoRestart()
+{
+    startCrasher("AR", "starting AR\nautorestarted AR\n");
+}
+
+void RestartTest::testEmergencySave()
+{
+    startCrasher("ES", "starting ES\nsaveFunction called\n");
 }
 
 QTEST_MAIN(RestartTest)
