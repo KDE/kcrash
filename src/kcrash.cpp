@@ -44,7 +44,6 @@
 #endif
 #include <errno.h>
 
-#include <qwindowdefs.h>
 #include <kaboutdata.h>
 #include <kstartupinfo.h>
 

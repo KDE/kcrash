@@ -28,7 +28,7 @@ add_library(KF5::Crash ALIAS KF5Crash)
 target_include_directories(KF5Crash INTERFACE "$<INSTALL_INTERFACE:${INCLUDE_INSTALL_DIR}/KCrash>")
 
 target_link_libraries(KF5Crash PUBLIC Qt5::Core)
-target_link_libraries(KF5Crash PRIVATE KF5::CoreAddons KF5::WindowSystem Qt5::Gui)
+target_link_libraries(KF5Crash PRIVATE KF5::CoreAddons KF5::WindowSystem)
 
 
 if(${X11_FOUND})

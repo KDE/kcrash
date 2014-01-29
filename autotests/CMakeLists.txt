@@ -2,10 +2,15 @@ remove_definitions(-DQT_NO_CAST_FROM_ASCII)
 
 include(ECMMarkAsTest)
 
-find_package(Qt5Test ${REQUIRED_QT_VERSION} CONFIG QUIET)
+find_package(Qt5 ${REQUIRED_QT_VERSION} CONFIG REQUIRED Test Widgets)
 
 if(NOT Qt5Test_FOUND)
     message(STATUS "Qt5Test not found, autotests will not be built.")
+    return()
+endif()
+
+if(NOT Qt5Widgets_FOUND)
+    message(STATUS "Qt5Widgets not found, autotests will not be built.")
     return()
 endif()
 
