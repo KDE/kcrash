@@ -31,18 +31,17 @@
 #include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <unistd.h>
 
-#include <sys/types.h>
-#include <sys/time.h>
+#include <qplatformdefs.h>
+#ifndef Q_OS_WIN
 #include <sys/resource.h>
-#include <sys/wait.h>
 #include <sys/un.h>
-#include <sys/socket.h>
+#else
+#include <qt_windows.h>
+#endif
 #ifdef Q_OS_LINUX
 #include <sys/prctl.h>
 #endif
-#include <errno.h>
 
 #include <kaboutdata.h>
 #include <kstartupinfo.h>
@@ -52,6 +51,7 @@
 #include <QtCore/QFileInfo>
 #include <QtCore/QDir>
 #include <QStandardPaths>
+#include <QThread>
 
 #if HAVE_X11
 #include <qx11info_x11.h>
@@ -66,10 +66,6 @@
 // going to do is -- through a complicated process -- print the
 // exact same information, but less reliably).
 #include <ucontext.h>
-#endif
-
-#if defined(Q_OS_WIN)
-# include <windows.h>
 #endif
 
 // Copy from klauncher_cmds
@@ -231,7 +227,43 @@ bool KCrash::isDrKonqiEnabled()
     return s_launchDrKonqi == 1;
 }
 
-static char *getDisplay();
+// The following function copy&pasted from kinit/wrapper.cpp :
+static char *getDisplay()
+{
+    const char *display;
+    char *result;
+    char *screen;
+    char *colon;
+    char *i;
+#if defined(NO_DISPLAY) || defined(Q_OS_WIN)
+    display = "NODISPLAY";
+#else
+    display = getenv("DISPLAY");
+#endif
+    if (!display || !*display) {
+        display = ":0";
+    }
+    result = (char *)malloc(strlen(display) + 1);
+    if (result == NULL) {
+        return NULL;
+    }
+
+    strcpy(result, display);
+    screen = strrchr(result, '.');
+    colon = strrchr(result, ':');
+    if (screen && (screen > colon)) {
+        *screen = '\0';
+    }
+    while ((i = strchr(result, ':'))) {
+        *i = '_';
+    }
+#ifdef __APPLE__
+    while ((i = strchr(result, '/'))) {
+        *i = '_';
+    }
+#endif
+    return result;
+}
 
 void
 KCrash::setCrashHandler(HandlerType handler)
@@ -295,6 +327,7 @@ KCrash::crashHandler()
     return s_crashHandler;
 }
 
+#ifndef Q_OS_WIN
 static void
 closeAllFDs()
 {
@@ -305,6 +338,7 @@ closeAllFDs()
         close(i);
     }
 }
+#endif
 
 void
 KCrash::defaultCrashHandler(int sig)
@@ -328,7 +362,7 @@ KCrash::defaultCrashHandler(int sig)
             s_emergencySaveFunction(sig);
         }
         if ((s_flags & AutoRestart) && s_autoRestartCommand) {
-            sleep(1);
+            QThread::sleep(1);
             startProcess(s_autoRestartArgc, const_cast<const char **>(s_autoRestartCommandLine), false);
         }
         crashRecursionCounter++;
@@ -469,9 +503,9 @@ void KCrash::startProcess(int argc, const char *argv[], bool waitAndExit)
 {
     QString cmdLine;
     for (int i = 0; i < argc; ++i) {
-        cmdLine.append('\"');
+        cmdLine.append(QLatin1Char('\"'));
         cmdLine.append(QFile::decodeName(argv[i]));
-        cmdLine.append("\" ");
+        cmdLine.append(QStringLiteral("\" "));
     }
 
     PROCESS_INFORMATION procInfo;
@@ -653,45 +687,6 @@ static pid_t startDirectly(const char *argv[])
     default:
         return pid;
     }
-}
-
-// From now on this code is copy&pasted from kinit/wrapper.cpp :
-
-static char *getDisplay()
-{
-    const char *display;
-    char *result;
-    char *screen;
-    char *colon;
-    char *i;
-#ifdef NO_DISPLAY
-    display = "NODISPLAY";
-#else
-    display = getenv("DISPLAY");
-#endif
-    if (!display || !*display) {
-        display = ":0";
-    }
-    result = (char *)malloc(strlen(display) + 1);
-    if (result == NULL) {
-        return NULL;
-    }
-
-    strcpy(result, display);
-    screen = strrchr(result, '.');
-    colon = strrchr(result, ':');
-    if (screen && (screen > colon)) {
-        *screen = '\0';
-    }
-    while ((i = strchr(result, ':'))) {
-        *i = '_';
-    }
-#ifdef __APPLE__
-    while ((i = strchr(result, '/'))) {
-        *i = '_';
-    }
-#endif
-    return result;
 }
 
 /*

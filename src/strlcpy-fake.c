@@ -25,7 +25,6 @@
 */
 
 #include <config-strlcpy.h>
-#include <kcrash_export.h>
 
 #ifndef HAVE_STRLCPY
 
@@ -33,7 +32,7 @@
 #include <string.h>
 #endif
 
-KCRASH_EXPORT unsigned long strlcpy(char *d, const char *s, unsigned long bufsize)
+unsigned long strlcpy(char *d, const char *s, unsigned long bufsize)
 {
     unsigned long len, ret = strlen(s);
 
