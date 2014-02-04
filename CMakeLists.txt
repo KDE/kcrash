@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 2.8.12)
 
 project(KCrash)
 
-find_package(ECM 0.0.9 REQUIRED NO_MODULE)
+find_package(ECM 0.0.10 REQUIRED NO_MODULE)
 set(CMAKE_MODULE_PATH ${ECM_MODULE_PATH} ${ECM_KDE_MODULE_DIR})
 
 set(REQUIRED_QT_VERSION 5.2.0)
@@ -19,7 +19,7 @@ include(GenerateExportHeader)
 include(ECMSetupVersion)
 include(ECMGenerateHeaders)
 
-set(KF5_VERSION "5.0.0")
+set(KF5_VERSION "4.96.0")
 ecm_setup_version(${KF5_VERSION} VARIABLE_PREFIX KCrash
                         VERSION_HEADER "${CMAKE_CURRENT_BINARY_DIR}/kcrash_version.h"
                         PACKAGE_VERSION_FILE "${CMAKE_CURRENT_BINARY_DIR}/KF5CrashConfigVersion.cmake")
