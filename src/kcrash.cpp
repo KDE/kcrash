@@ -48,7 +48,7 @@
 #include <kstartupinfo.h>
 
 #include <QDebug>
-#include <QCoreApplication>
+#include <QGuiApplication>
 #include <QtCore/QFileInfo>
 #include <QtCore/QDir>
 #include <QStandardPaths>
@@ -405,19 +405,27 @@ KCrash::defaultCrashHandler(int sig)
             return;
         }
 
-        const char *argv[27];  // don't forget to update this
+        const char *argv[29];  // don't forget to update this
         int i = 0;
 
         // argument 0 has to be drkonqi
         argv[i++] = s_drkonqiPath;
 
+        const QByteArray platformName = QGuiApplication::platformName().toUtf8();
+        if (!platformName.isEmpty()) {
+            argv[i++] = "-platform";
+            argv[i++] = platformName.constData();
+        }
+
 #if HAVE_X11
-        // start up on the correct display
-        argv[i++] = "-display";
-        if (QX11Info::display()) {
-            argv[i++] = XDisplayString(QX11Info::display());
-        } else {
-            argv[i++] = getenv("DISPLAY");
+        if (platformName == QByteArrayLiteral("xcb")) {
+            // start up on the correct display
+            argv[i++] = "-display";
+            if (QX11Info::display()) {
+                argv[i++] = XDisplayString(QX11Info::display());
+            } else {
+                argv[i++] = getenv("DISPLAY");
+            }
         }
 #endif
 
