@@ -23,6 +23,7 @@
 #include <kcrash.h>
 #ifdef Q_OS_UNIX
 #include <sys/resource.h> // setrlimit
+#include <errno.h>
 #endif
 
 QFile output;

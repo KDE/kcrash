@@ -36,6 +36,7 @@
 #ifndef Q_OS_WIN
 #include <sys/resource.h>
 #include <sys/un.h>
+#include <errno.h>
 #else
 #include <qt_windows.h>
 #endif
