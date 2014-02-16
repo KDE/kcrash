@@ -41,13 +41,12 @@ set_target_properties(KF5Crash PROPERTIES VERSION   ${KCrash_VERSION_STRING}
                                           EXPORT_NAME Crash
 )
 
-ecm_generate_headers(
+ecm_generate_headers(KCrash_HEADERS
+  HEADER_NAMES
   KCrash
 
-  MODULE_NAME KCrash
   REQUIRED_HEADERS KCrash_HEADERS
 )
-install(DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/KCrash DESTINATION ${INCLUDE_INSTALL_DIR} COMPONENT Devel)
 
 install(TARGETS KF5Crash EXPORT KF5CrashTargets ${INSTALL_TARGETS_DEFAULT_ARGS})
 
