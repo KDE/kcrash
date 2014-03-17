@@ -25,7 +25,6 @@
 #include "kcrash.h"
 
 #include <config-kcrash.h>
-#include <config-strlcpy.h>
 
 #include <string.h>
 #include <signal.h>
@@ -471,11 +470,11 @@ KCrash::defaultCrashHandler(int sig)
             }
         }
 
-        char sidtxt[256];
-        if (!KStartupInfo::startupId().isNull()) {
+        // make sure the constData() pointer remains valid when we call startProcess by making a copy
+        QByteArray startupId = KStartupInfo::startupId();
+        if (!startupId.isNull()) {
             argv[i++] = "--startupid";
-            strlcpy(sidtxt, KStartupInfo::startupId().constData(), sizeof(sidtxt));
-            argv[i++] = sidtxt;
+            argv[i++] = startupId.constData();
         }
 
         if (s_flags & SaferDialog) {
