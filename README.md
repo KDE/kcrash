@@ -1,6 +1,6 @@
 # KCrash
 
-Gracefull handling of application crashes
+Graceful handling of application crashes
 
 ## Introduction
 
