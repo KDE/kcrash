@@ -1,6 +1,7 @@
 
 set(kcrash_SRCS
   kcrash.cpp
+  ${kcrash_QM_LOADER}
 )
 
 configure_file(

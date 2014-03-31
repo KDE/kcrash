@@ -33,6 +33,16 @@ if(NOT kdelibs_SOURCE_DIR)
   find_package(KF5WindowSystem ${KF5_VERSION} REQUIRED)
 endif()
 
+if (EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/po)
+  include(ECMCreateQmFromPoFiles)
+  ecm_create_qm_from_po_files(
+    PO_DIR po
+    POT_NAME kcrash5.pot
+    DATA_INSTALL_SUB_DIR kcrash
+    CREATE_LOADER kcrash_QM_LOADER
+  )
+endif()
+
 add_subdirectory(src)
 add_subdirectory(autotests)
 
