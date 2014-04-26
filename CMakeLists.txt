@@ -22,15 +22,16 @@ include(GenerateExportHeader)
 include(ECMSetupVersion)
 include(ECMGenerateHeaders)
 
-set(KF5_VERSION "4.98.0")
+set(KF5_VERSION "4.98.0") # handled by release scripts # handled by release scripts
+set(KF5_DEP_VERSION "4.98.0") # handled by release scripts
 ecm_setup_version(${KF5_VERSION} VARIABLE_PREFIX KCrash
                         VERSION_HEADER "${CMAKE_CURRENT_BINARY_DIR}/kcrash_version.h"
                         PACKAGE_VERSION_FILE "${CMAKE_CURRENT_BINARY_DIR}/KF5CrashConfigVersion.cmake"
                         SOVERSION 5)
 
 if(NOT kdelibs_SOURCE_DIR)
-  find_package(KF5CoreAddons ${KF5_VERSION} REQUIRED)
-  find_package(KF5WindowSystem ${KF5_VERSION} REQUIRED)
+  find_package(KF5CoreAddons ${KF5_DEP_VERSION} REQUIRED)
+  find_package(KF5WindowSystem ${KF5_DEP_VERSION} REQUIRED)
 endif()
 
 if (EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/po)
