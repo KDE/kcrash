@@ -1,1 +1,10 @@
+maintainer: dfaure
+description: Support for application crash analysis and bug report from apps
 tier: 2
+type: integration
+platforms:
+    - name: Linux
+    - name: Windows
+portingAid: false
+deprecated: false
+release: true
