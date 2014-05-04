@@ -35,8 +35,8 @@ if(NOT kdelibs_SOURCE_DIR)
 endif()
 
 if (EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/po)
-  include(ECMCreateQmFromPoFiles)
-  ecm_create_qm_from_po_files(
+  include(ECMPoQmTools)
+    ecm_install_po_files_as_qm(po)
     PO_DIR po
     POT_NAME kcrash5.pot
     DATA_INSTALL_SUB_DIR kcrash
