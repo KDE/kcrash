@@ -36,12 +36,7 @@ endif()
 
 if (EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/po)
   include(ECMPoQmTools)
-    ecm_install_po_files_as_qm(po)
-    PO_DIR po
-    POT_NAME kcrash5.pot
-    DATA_INSTALL_SUB_DIR kcrash
-    CREATE_LOADER kcrash_QM_LOADER
-  )
+  ecm_install_po_files_as_qm(po)
 endif()
 
 add_subdirectory(src)
