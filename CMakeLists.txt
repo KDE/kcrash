@@ -29,10 +29,8 @@ ecm_setup_version(${KF5_VERSION} VARIABLE_PREFIX KCrash
                         PACKAGE_VERSION_FILE "${CMAKE_CURRENT_BINARY_DIR}/KF5CrashConfigVersion.cmake"
                         SOVERSION 5)
 
-if(NOT kdelibs_SOURCE_DIR)
-  find_package(KF5CoreAddons ${KF5_DEP_VERSION} REQUIRED)
-  find_package(KF5WindowSystem ${KF5_DEP_VERSION} REQUIRED)
-endif()
+find_package(KF5CoreAddons ${KF5_DEP_VERSION} REQUIRED)
+find_package(KF5WindowSystem ${KF5_DEP_VERSION} REQUIRED)
 
 if (EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/po)
   include(ECMPoQmTools)
