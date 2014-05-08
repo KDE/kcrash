@@ -15,17 +15,13 @@ if(NOT Qt5Widgets_FOUND)
     return()
 endif()
 
-macro(KCRASH_UNIT_TESTS)
-   foreach(_testname ${ARGN})
-      ecm_add_test(kcrashtest.cpp TEST_NAME kcrash-kcrashtest LINK_LIBRARIES Qt5::Core Qt5::Test)
-   endforeach(_testname)
-endmacro(KCRASH_UNIT_TESTS)
-
-kcrash_unit_tests(
-  kcrashtest
+ecm_add_tests(
+  kcrashtest.cpp
+  NAME_PREFIX "kcrash-"
+  LINK_LIBRARIES Qt5::Core Qt5::Test
 )
 
 add_executable(test_crasher test_crasher.cpp)
 target_link_libraries(test_crasher Qt5::Widgets KF5::Crash)
 ecm_mark_as_test(test_crasher)
-
+ecm_mark_nongui_executable(test_crasher)
