@@ -1,6 +1,6 @@
 remove_definitions(-DQT_NO_CAST_FROM_ASCII)
 
-include(ECMMarkAsTest)
+include(ECMAddTests)
 
 find_package(Qt5Test ${REQUIRED_QT_VERSION} CONFIG QUIET)
 find_package(Qt5Widgets ${REQUIRED_QT_VERSION} CONFIG QUIET)
@@ -17,10 +17,7 @@ endif()
 
 macro(KCRASH_UNIT_TESTS)
    foreach(_testname ${ARGN})
-      add_executable(${_testname} ${_testname}.cpp)
-      add_test(kcrash-${_testname} ${_testname})
-      target_link_libraries(${_testname} Qt5::Core Qt5::Test)
-      ecm_mark_as_test(${_testname})
+      ecm_add_test(kcrashtest.cpp TEST_NAME kcrash-kcrashtest LINK_LIBRARIES Qt5::Core Qt5::Test)
    endforeach(_testname)
 endmacro(KCRASH_UNIT_TESTS)
 
