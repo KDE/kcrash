@@ -278,6 +278,7 @@ KCrash::setCrashHandler(HandlerType handler)
         // Prepare this now to avoid mallocs in the crash handler.
         char *display = getDisplay();
         const QString socketFileName = QString::fromLatin1("kdeinit5_%1").arg(QLatin1String(display));
+        free(display);
         QByteArray socketName = QFile::encodeName(QStandardPaths::writableLocation(QStandardPaths::RuntimeLocation) +
                                 QLatin1Char('/') + socketFileName);
         s_kdeinit_socket_file = qstrdup(socketName.constData());
