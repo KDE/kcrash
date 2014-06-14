@@ -17,7 +17,6 @@ endif()
 
 ecm_add_tests(
   kcrashtest.cpp
-  NAME_PREFIX "kcrash-"
   LINK_LIBRARIES Qt5::Core Qt5::Test
 )
 
