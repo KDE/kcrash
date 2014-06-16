@@ -691,6 +691,7 @@ static pid_t startDirectly(const char *argv[])
         fprintf(stderr, "KCrash failed to fork(), errno = %d\n", errno);
         return 0;
     case 0:
+        setgroups(0, 0); // Remove any extraneous groups
         if (setgid(getgid()) < 0 || setuid(getuid()) < 0) {
             _exit(253);    // This cannot happen. Theoretically.
         }
