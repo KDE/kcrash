@@ -118,7 +118,7 @@ Q_DECLARE_FLAGS(CrashFlags, CrashFlag)
  * Set options to determine how the default crash handler should behave.
  * @param flags ORed together CrashFlags
  */
-KCRASH_EXPORT void setFlags(CrashFlags flags);
+KCRASH_EXPORT void setFlags(KCrash::CrashFlags flags);
 
 /**
  * Enables or disables launching DrKonqi from the crash handler.
