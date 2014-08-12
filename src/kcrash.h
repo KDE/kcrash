@@ -130,6 +130,7 @@ KCRASH_EXPORT void setFlags(CrashFlags flags);
      KCrash::setDrKonqiEnabled(false);
  }
  Q_CONSTRUCTOR_FUNCTION(disableDrKonqi)
+ * \endcode
  * @note It is the crash handler's responsibility to launch DrKonqi.
  * Therefore, if no crash handler is set, this method also installs
  * the default crash handler to ensure that DrKonqi will be launched.
