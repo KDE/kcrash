@@ -8,3 +8,7 @@ platforms:
 portingAid: false
 deprecated: false
 release: true
+libraries:
+ - qmake: KCrash
+   cmake: "KF5::Crash"
+cmakename: KF5Crash
