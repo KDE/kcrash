@@ -212,7 +212,7 @@ void KCrash::setDrKonqiEnabled(bool enabled)
         const QList<QString> paths = QFile::decodeName(qgetenv("LIBEXEC_PATH")).split(QLatin1Char(':'));
         const QString exec = QStandardPaths::findExecutable(QLatin1String("drkonqi"), paths);
         if (exec.isEmpty()) {
-            s_drkonqiPath = qstrdup(CMAKE_INSTALL_PREFIX "/" LIBEXEC_INSTALL_DIR "/drkonqi");
+            s_drkonqiPath = qstrdup(CMAKE_INSTALL_FULL_LIBEXECDIR "/drkonqi");
             if (!QFile::exists(QLatin1String(s_drkonqiPath))) {
                 qWarning() << "Could not find drkonqi at" << s_drkonqiPath;
                 s_launchDrKonqi = 0;
