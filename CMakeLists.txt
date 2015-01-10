@@ -41,7 +41,7 @@ add_subdirectory(src)
 add_subdirectory(autotests)
 
 # create a Config.cmake and a ConfigVersion.cmake file and install them
-set(CMAKECONFIG_INSTALL_DIR "${CMAKECONFIG_INSTALL_PREFIX}/KF5Crash")
+set(CMAKECONFIG_INSTALL_DIR "${KDE_INSTALL_CMAKEPACKAGEDIR}/KF5Crash")
 
 include(ECMPackageConfigHelpers)
 
@@ -62,7 +62,7 @@ install(EXPORT KF5CrashTargets DESTINATION "${CMAKECONFIG_INSTALL_DIR}" FILE KF5
 
 install(FILES
    ${CMAKE_CURRENT_BINARY_DIR}/kcrash_version.h
-  DESTINATION ${KF5_INCLUDE_INSTALL_DIR} COMPONENT Devel
+  DESTINATION ${KDE_INSTALL_INCLUDEDIR_KF5} COMPONENT Devel
 )
 
 feature_summary(WHAT ALL FATAL_ON_MISSING_REQUIRED_PACKAGES)
