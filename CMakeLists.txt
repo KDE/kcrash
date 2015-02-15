@@ -22,7 +22,7 @@ include(GenerateExportHeader)
 include(ECMSetupVersion)
 include(ECMGenerateHeaders)
 
-set(KF5_VERSION "5.7.0") # handled by release scripts
+set(KF5_VERSION "5.8.0") # handled by release scripts
 set(KF5_DEP_VERSION "5.7.0") # handled by release scripts
 ecm_setup_version(${KF5_VERSION} VARIABLE_PREFIX KCrash
                         VERSION_HEADER "${CMAKE_CURRENT_BINARY_DIR}/kcrash_version.h"
