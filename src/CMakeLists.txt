@@ -20,7 +20,7 @@ target_link_libraries(KF5Crash PRIVATE KF5::CoreAddons KF5::WindowSystem)
 
 
 if(${X11_FOUND})
-  find_package(Qt5X11Extras 5.2.0 REQUIRED NO_MODULE)
+  find_package(Qt5X11Extras ${REQUIRED_QT_VERSION} REQUIRED NO_MODULE)
   target_link_libraries(KF5Crash PRIVATE Qt5::X11Extras ${X11_LIBRARIES})
   target_include_directories(KF5Crash PRIVATE ${X11_X11_INCLUDE_PATH})
 endif()
