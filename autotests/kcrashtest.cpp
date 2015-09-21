@@ -60,6 +60,9 @@ static void startCrasher(const QByteArray &flag, const QByteArray &expectedOutpu
     processName = "./test_crasher";
 #endif
     //qDebug() << proc.args();
+    QProcessEnvironment env = QProcessEnvironment::systemEnvironment();
+    env.insert("ASAN_OPTIONS", "handle_segv=0,poison_heap=0"); // Disable ASAN
+    proc.setProcessEnvironment(env);
     proc.start(processName, QStringList() << flag);
     bool ok = proc.waitForFinished();
     QVERIFY(ok);
