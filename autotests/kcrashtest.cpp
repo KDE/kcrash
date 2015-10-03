@@ -26,10 +26,11 @@
 class KCrashTest : public QObject
 {
     Q_OBJECT
-public:
-    KCrashTest() {}
-
 private Q_SLOTS:
+    void initTestCase() {
+        // Don't bring up drkonqi
+        qputenv("KDE_DEBUG", "1");
+    }
     void testAutoRestart();
     void testEmergencySave();
 
