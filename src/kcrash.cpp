@@ -97,17 +97,7 @@ static int s_launchDrKonqi = -1; // -1=initial value 0=disabled 1=enabled
 
 static void kcrashInitialize()
 {
-    if (s_launchDrKonqi == 0) { // disabled by the program itself
-        return;
-    }
-    const QStringList args = QCoreApplication::arguments();
-    if (qgetenv("KDE_DEBUG").isEmpty()
-        && qgetenv("KCRASH_AUTO_RESTARTED").isEmpty()) {
-        // enable drkonqi
-        KCrash::setDrKonqiEnabled(true);
-    }
-
-    KCrash::setApplicationFilePath(QCoreApplication::applicationFilePath());
+    KCrash::initialize();
 }
 Q_COREAPP_STARTUP_FUNCTION(kcrashInitialize)
 
@@ -119,6 +109,21 @@ void startProcess(int argc, const char *argv[], bool waitAndExit);
 #if defined(Q_OS_WIN)
 LONG WINAPI win32UnhandledExceptionFilter(_EXCEPTION_POINTERS *exceptionInfo);
 #endif
+}
+
+void KCrash::initialize()
+{
+    if (s_launchDrKonqi == 0) { // disabled by the program itself
+        return;
+    }
+    const QStringList args = QCoreApplication::arguments();
+    if (!qEnvironmentVariableIsSet("KDE_DEBUG")
+        && !qEnvironmentVariableIsSet("KCRASH_AUTO_RESTARTED")) {
+        // enable drkonqi
+        KCrash::setDrKonqiEnabled(true);
+    }
+
+    KCrash::setApplicationFilePath(QCoreApplication::applicationFilePath());
 }
 
 void
@@ -172,7 +177,7 @@ KCrash::setFlags(KCrash::CrashFlags flags)
     if (s_flags & AutoRestart) {
         // We need at least the default crash handler for autorestart to work.
         if (!s_crashHandler) {
-            if (!qgetenv("KCRASH_AUTO_RESTARTED").isEmpty()) {
+            if (qEnvironmentVariableIsSet("KCRASH_AUTO_RESTARTED")) {
                 new KCrashDelaySetHandler;
             } else {
                 setCrashHandler(defaultCrashHandler);
@@ -207,7 +212,11 @@ void KCrash::setApplicationFilePath(const QString &filePath)
 
 void KCrash::setDrKonqiEnabled(bool enabled)
 {
-    s_launchDrKonqi = enabled ? 1 : 0;
+    const int launchDrKonqi = enabled ? 1 : 0;
+    if (s_launchDrKonqi == launchDrKonqi) {
+        return;
+    }
+    s_launchDrKonqi = launchDrKonqi;
     if (s_launchDrKonqi && !s_drkonqiPath) {
         const QList<QString> paths = QFile::decodeName(qgetenv("LIBEXEC_PATH")).split(QLatin1Char(':'));
         const QString exec = QStandardPaths::findExecutable(QLatin1String("drkonqi"), paths);

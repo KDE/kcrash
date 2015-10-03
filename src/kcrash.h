@@ -47,6 +47,18 @@ class QString;
  */
 namespace KCrash
 {
+
+/**
+ * Initialize KCrash.
+ *
+ * This does nothing if $KDE_DEBUG is set.
+ *
+ * You can call this in your main(). Note that the platform plugin
+ * does this too, so on a full KF5 installation this happens automatically.
+ * @since 5.15
+ */
+KCRASH_EXPORT void initialize();
+
 /**
  * The default crash handler.
  * Do not call this function directly. Instead, use
