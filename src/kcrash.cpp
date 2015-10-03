@@ -652,7 +652,8 @@ static pid_t startFromKdeinit(int argc, const char *argv[])
     kcrash_launcher_header header;
     header.cmd = LAUNCHER_EXEC_NEW;
     const int BUFSIZE = 8192; // make sure this is big enough
-    char buffer[ BUFSIZE + 10 + 24 /*the env var*/ ];
+    const int CWDSIZE = 2000;
+    char buffer[ BUFSIZE + 10 + 24 /*the env var*/ + CWDSIZE+1 ];
     int pos = 0;
     long argcl = argc;
     memcpy(buffer + pos, &argcl, sizeof(argcl));
@@ -680,9 +681,18 @@ static pid_t startFromKdeinit(int argc, const char *argv[])
     long avoid_loops = 0;
     memcpy(buffer + pos, &avoid_loops, sizeof(avoid_loops));
     pos += sizeof(avoid_loops);
+
+    char cwd[CWDSIZE];
+    if (getcwd(cwd, CWDSIZE-1)) {
+        len = strlen(cwd) + 1; // include terminating \0
+        memcpy(buffer + pos, cwd, len);
+        pos += len;
+    }
+
     header.arg_length = pos;
     write_socket(socket, (char *) &header, sizeof(header));
     write_socket(socket, buffer, pos);
+
     if (read_socket(socket, (char *) &header, sizeof(header)) < 0
             || header.cmd != LAUNCHER_OK) {
         return 0;
