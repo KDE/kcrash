@@ -52,6 +52,17 @@
 #include <QtCore/QDir>
 #include <QStandardPaths>
 #include <QThread>
+#include <QLibraryInfo>
+
+#include <QLoggingCategory>
+Q_DECLARE_LOGGING_CATEGORY(LOG_KCRASH)
+
+#if QT_VERSION >= QT_VERSION_CHECK(5, 4, 0)
+// logging category for this framework, default: log stuff >= warning
+Q_LOGGING_CATEGORY(LOG_KCRASH, "org.kde.kcrash", QtWarningMsg)
+#else
+Q_LOGGING_CATEGORY(LOG_KCRASH, "org.kde.kcrash")
+#endif
 
 #if HAVE_X11
 #include <qx11info_x11.h>
@@ -218,14 +229,16 @@ void KCrash::setDrKonqiEnabled(bool enabled)
     }
     s_launchDrKonqi = launchDrKonqi;
     if (s_launchDrKonqi && !s_drkonqiPath) {
-        const QList<QString> paths = QFile::decodeName(qgetenv("LIBEXEC_PATH")).split(QLatin1Char(':'));
+        // search paths
+        const QStringList paths = QStringList()
+            << QFile::decodeName(qgetenv("LIBEXEC_PATH")).split(QLatin1Char(':'), QString::SkipEmptyParts) // env var is used first
+            << QCoreApplication::applicationDirPath() // then look where our application binary is located
+            << QLibraryInfo::location(QLibraryInfo::LibraryExecutablesPath) // look where libexec path is (can be set in qt.conf)
+            << QFile::decodeName(CMAKE_INSTALL_FULL_LIBEXECDIR); // look at our installation location
         const QString exec = QStandardPaths::findExecutable(QLatin1String("drkonqi"), paths);
         if (exec.isEmpty()) {
-            s_drkonqiPath = qstrdup(CMAKE_INSTALL_FULL_LIBEXECDIR "/drkonqi");
-            if (!QFile::exists(QLatin1String(s_drkonqiPath))) {
-                qWarning() << "Could not find drkonqi at" << s_drkonqiPath;
-                s_launchDrKonqi = 0;
-            }
+            qCDebug(LOG_KCRASH) << "Could not find drkonqi in search paths:" << paths;
+            s_launchDrKonqi = 0;
         } else {
             s_drkonqiPath = qstrdup(qPrintable(exec));
         }
