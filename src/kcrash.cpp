@@ -235,7 +235,7 @@ void KCrash::setDrKonqiEnabled(bool enabled)
             << QCoreApplication::applicationDirPath() // then look where our application binary is located
             << QLibraryInfo::location(QLibraryInfo::LibraryExecutablesPath) // look where libexec path is (can be set in qt.conf)
             << QFile::decodeName(CMAKE_INSTALL_FULL_LIBEXECDIR); // look at our installation location
-        const QString exec = QStandardPaths::findExecutable(QLatin1String("drkonqi"), paths);
+        const QString exec = QStandardPaths::findExecutable(QStringLiteral("drkonqi"), paths);
         if (exec.isEmpty()) {
             qCDebug(LOG_KCRASH) << "Could not find drkonqi in search paths:" << paths;
             s_launchDrKonqi = 0;
@@ -299,7 +299,7 @@ KCrash::setCrashHandler(HandlerType handler)
     if (!s_kdeinit_socket_file) {
         // Prepare this now to avoid mallocs in the crash handler.
         char *display = getDisplay();
-        const QString socketFileName = QString::fromLatin1("kdeinit5_%1").arg(QLatin1String(display));
+        const QString socketFileName = QStringLiteral("kdeinit5_%1").arg(QLatin1String(display));
         free(display);
         QByteArray socketName = QFile::encodeName(QStandardPaths::writableLocation(QStandardPaths::RuntimeLocation) +
                                 QLatin1Char('/') + socketFileName);
