@@ -53,8 +53,7 @@ namespace KCrash
  *
  * This does nothing if $KDE_DEBUG is set.
  *
- * You can call this in your main(). Note that the platform plugin
- * does this too, so on a full KF5 installation this happens automatically.
+ * Call this in your main() to ensure that the crash handler is always launched.
  * @since 5.15
  */
 KCRASH_EXPORT void initialize();
