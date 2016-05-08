@@ -784,6 +784,13 @@ static int read_socket(int sock, char *buffer, int len)
 static int openSocket()
 {
     struct sockaddr_un server;
+    if (!s_kdeinit_socket_file ||
+        strlen(s_kdeinit_socket_file) > (sizeof(server.sun_path) - 1))
+    {
+        fprintf(stderr, "kcrash: Unable to communicate with kdeinit5, socket name is %s!",
+                (s_kdeinit_socket_file) ? "too long" : "undefined");
+        return -1;
+    }
 
     /*
      * create the socket stream
