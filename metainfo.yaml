@@ -12,3 +12,7 @@ libraries:
  - qmake: KCrash
    cmake: "KF5::Crash"
 cmakename: KF5Crash
+
+public_lib: true
+group: Frameworks
+subgroup: Tier 2
