@@ -57,12 +57,8 @@
 #include <QLoggingCategory>
 Q_DECLARE_LOGGING_CATEGORY(LOG_KCRASH)
 
-#if QT_VERSION >= QT_VERSION_CHECK(5, 4, 0)
 // logging category for this framework, default: log stuff >= warning
 Q_LOGGING_CATEGORY(LOG_KCRASH, "org.kde.kcrash", QtWarningMsg)
-#else
-Q_LOGGING_CATEGORY(LOG_KCRASH, "org.kde.kcrash")
-#endif
 
 #if HAVE_X11
 #include <qx11info_x11.h>
