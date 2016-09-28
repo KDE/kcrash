@@ -15,7 +15,11 @@ if(NOT Qt5Widgets_FOUND)
     return()
 endif()
 
+# Include src so we have access to config-kcrash.h
+include_directories(${CMAKE_CURRENT_BINARY_DIR}/../src)
+
 ecm_add_tests(
+  coreconfigtest.cpp
   kcrashtest.cpp
   LINK_LIBRARIES Qt5::Core Qt5::Test
 )

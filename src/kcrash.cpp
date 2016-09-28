@@ -75,6 +75,8 @@ Q_LOGGING_CATEGORY(LOG_KCRASH, "org.kde.kcrash", QtInfoMsg)
 #include <ucontext.h>
 #endif
 
+#include "coreconfig_p.h"
+
 // Copy from klauncher_cmds
 typedef struct {
     long cmd;
@@ -101,6 +103,7 @@ static char *s_drkonqiPath = 0;
 static char *s_kdeinit_socket_file = 0;
 static KCrash::CrashFlags s_flags = 0;
 static int s_launchDrKonqi = -1; // -1=initial value 0=disabled 1=enabled
+Q_GLOBAL_STATIC(KCrash::CoreConfig, s_coreConfig)
 
 static void kcrashInitialize()
 {
@@ -131,6 +134,8 @@ void KCrash::initialize()
     }
 
     KCrash::setApplicationFilePath(QCoreApplication::applicationFilePath());
+
+    s_coreConfig(); // Initialize.
 }
 
 void
@@ -527,6 +532,13 @@ KCrash::defaultCrashHandler(int sig)
         fprintf(stderr, "Unable to start Dr. Konqi\n");
     }
 
+    if (s_coreConfig->isProcess()) {
+        fprintf(stderr, "Re-raising signal for core dump handling.\n");
+        KCrash::setCrashHandler(0);
+        raise(sig);
+        // not getting here
+    }
+
     _exit(255);
 }
 
@@ -646,7 +658,10 @@ static bool startProcessInternal(int argc, const char *argv[], bool waitAndExit,
                 sleep(1);
             }
         }
-        _exit(253);
+        if (!s_coreConfig->isProcess()) {
+            // Only exit if we don't forward to core dumps
+            _exit(253);
+        }
     }
 
     return (pid > 0); //return true on success

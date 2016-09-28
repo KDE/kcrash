@@ -36,6 +36,22 @@ ecm_setup_version(${KF5_VERSION} VARIABLE_PREFIX KCrash
 find_package(KF5CoreAddons ${KF5_DEP_VERSION} REQUIRED)
 find_package(KF5WindowSystem ${KF5_DEP_VERSION} REQUIRED)
 
+# On KF5.29 we want kernel pattern raising to be default, so automate the
+# switch.
+# This can be savely removed for KF5.29+
+set(KCRASH_CORE_PATTERN_RAISE_DEFAULT ON)
+if(${KF5_VERSION} VERSION_LESS "5.29.0")
+    set(KCRASH_CORE_PATTERN_RAISE_DEFAULT OFF)
+    set(FEATURE_ADDENDUM "This will be enabled by default in 5.29.")
+endif()
+
+option(KCRASH_CORE_PATTERN_RAISE
+    "Enables raising signals to kernel core patterns (iff the pattern is a process). You may wish to not intall drkonqi if this can cause a UI conflict."
+    ${KCRASH_CORE_PATTERN_RAISE_DEFAULT})
+add_feature_info("Core Pattern Raising"
+    KCRASH_CORE_PATTERN_RAISE
+    "Raising signals to kernel core patterns (iff the pattern is a process). You may wish to not install drkonqi if this can cause a UI conflict. ${FEATURE_ADDENDUM}")
+
 if (EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/po)
   include(ECMPoQmTools)
   ecm_install_po_files_as_qm(po)

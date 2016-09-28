@@ -1,6 +1,7 @@
 
 set(kcrash_SRCS
   kcrash.cpp
+  coreconfig.cpp
   ${kcrash_QM_LOADER}
 )
 
