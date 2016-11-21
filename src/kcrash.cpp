@@ -357,7 +357,7 @@ KCrash::crashHandler()
     return s_crashHandler;
 }
 
-#ifndef Q_OS_WIN
+#if !defined(Q_OS_WIN) && !defined(Q_OS_OSX)
 static void
 closeAllFDs()
 {
@@ -398,7 +398,7 @@ KCrash::defaultCrashHandler(int sig)
         crashRecursionCounter++;
     }
 
-#if !defined(Q_OS_WIN)
+#if !defined(Q_OS_WIN) && !defined(Q_OS_OSX)
     if (!(s_flags & KeepFDs)) {
         closeAllFDs();
     }
@@ -738,7 +738,9 @@ static pid_t startDirectly(const char *argv[])
         if (setgid(getgid()) < 0 || setuid(getuid()) < 0) {
             _exit(253);    // This cannot happen. Theoretically.
         }
+#ifndef Q_OS_OSX
         closeAllFDs(); // We are in the child now. Close FDs unconditionally.
+#endif
         setenv("KCRASH_AUTO_RESTARTED", "1", 1);
         execvp(argv[0], const_cast< char ** >(argv));
         fprintf(stderr, "KCrash failed to exec(), errno = %d\n", errno);
