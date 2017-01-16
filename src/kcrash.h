@@ -106,7 +106,7 @@ KCRASH_EXPORT HandlerType crashHandler();
  * is installed to ensure the save function will be called.
  * @param saveFunction the handler to install
  */
-KCRASH_EXPORT void setEmergencySaveFunction(HandlerType saveFunction = 0);
+KCRASH_EXPORT void setEmergencySaveFunction(HandlerType saveFunction = nullptr);
 
 /**
  * Returns the currently set emergency save function.

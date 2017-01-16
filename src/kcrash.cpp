@@ -92,16 +92,16 @@ KCRASH_EXPORT bool loadedByKdeinit = false;
 void setApplicationFilePath(const QString &filePath);
 }
 
-static KCrash::HandlerType s_emergencySaveFunction = 0;
-static KCrash::HandlerType s_crashHandler = 0;
-static char *s_appName = 0;
-static char *s_autoRestartCommand = 0;
-static char *s_appPath = 0;
+static KCrash::HandlerType s_emergencySaveFunction = nullptr;
+static KCrash::HandlerType s_crashHandler = nullptr;
+static char *s_appName = nullptr;
+static char *s_autoRestartCommand = nullptr;
+static char *s_appPath = nullptr;
 static int s_autoRestartArgc = 0;
-static char **s_autoRestartCommandLine = 0;
-static char *s_drkonqiPath = 0;
-static char *s_kdeinit_socket_file = 0;
-static KCrash::CrashFlags s_flags = 0;
+static char **s_autoRestartCommandLine = nullptr;
+static char *s_drkonqiPath = nullptr;
+static char *s_kdeinit_socket_file = nullptr;
+static KCrash::CrashFlags s_flags = nullptr;
 static int s_launchDrKonqi = -1; // -1=initial value 0=disabled 1=enabled
 Q_GLOBAL_STATIC(KCrash::CoreConfig, s_coreConfig)
 
@@ -219,7 +219,7 @@ void KCrash::setApplicationFilePath(const QString &filePath)
     for (int i = 0; i < args.count(); ++i) {
         s_autoRestartCommandLine[i] = qstrdup(QFile::encodeName(args.at(i)).constData());
     }
-    s_autoRestartCommandLine[args.count()] = 0;
+    s_autoRestartCommandLine[args.count()] = nullptr;
 }
 
 void KCrash::setDrKonqiEnabled(bool enabled)
@@ -345,7 +345,7 @@ KCrash::setCrashHandler(HandlerType handler)
     sigaddset(&mask, SIGABRT);
 #endif
 
-    sigprocmask(SIG_UNBLOCK, &mask, 0);
+    sigprocmask(SIG_UNBLOCK, &mask, nullptr);
 #endif
 
     s_crashHandler = handler;
@@ -427,7 +427,7 @@ KCrash::defaultCrashHandler(int sig)
 #endif
 
         if (s_launchDrKonqi != 1) {
-            setCrashHandler(0);
+            setCrashHandler(nullptr);
 #if !defined(Q_OS_WIN)
             raise(sig); // dump core, or whatever is the default action for this signal.
 #endif
@@ -523,7 +523,7 @@ KCrash::defaultCrashHandler(int sig)
 #endif
 
         // NULL terminated list
-        argv[i] = NULL;
+        argv[i] = nullptr;
 
         startProcess(i, argv, true);
     }
@@ -534,7 +534,7 @@ KCrash::defaultCrashHandler(int sig)
 
     if (s_coreConfig->isProcess()) {
         fprintf(stderr, "Re-raising signal for core dump handling.\n");
-        KCrash::setCrashHandler(0);
+        KCrash::setCrashHandler(nullptr);
         raise(sig);
         // not getting here
     }
@@ -646,7 +646,7 @@ static bool startProcessInternal(int argc, const char *argv[], bool waitAndExit,
         // when launching drkonqi. Note that drkonqi will stop this process in the meantime.
         if (directly) {
             //if the process was started directly, use waitpid(), as it's a child...
-            while (waitpid(-1, NULL, 0) != pid) {}
+            while (waitpid(-1, nullptr, 0) != pid) {}
         } else {
 #ifdef Q_OS_LINUX
             // Declare the process that will be debugging the crashed KDE app (#245529)
@@ -736,7 +736,7 @@ static pid_t startDirectly(const char *argv[])
         fprintf(stderr, "KCrash failed to fork(), errno = %d\n", errno);
         return 0;
     case 0:
-        setgroups(0, 0); // Remove any extraneous groups
+        setgroups(0, nullptr); // Remove any extraneous groups
         if (setgid(getgid()) < 0 || setuid(getuid()) < 0) {
             _exit(253);    // This cannot happen. Theoretically.
         }
