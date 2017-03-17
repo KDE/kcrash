@@ -131,6 +131,8 @@ void KCrash::initialize()
         && !qEnvironmentVariableIsSet("KCRASH_AUTO_RESTARTED")) {
         // enable drkonqi
         KCrash::setDrKonqiEnabled(true);
+    } else {
+        qCDebug(LOG_KCRASH) << "KCrash disabled through environment.";
     }
 
     KCrash::setApplicationFilePath(QCoreApplication::applicationFilePath());
