@@ -46,6 +46,28 @@ install(FILES
   DESTINATION ${KDE_INSTALL_INCLUDEDIR_KF5}/KCrash COMPONENT Devel
 )
 
+if(BUILD_QCH)
+    ecm_add_qch(
+        KF5Crash_QCH
+        NAME KCrash
+        BASE_NAME KF5Crash
+        VERSION ${KF5_VERSION}
+        ORG_DOMAIN org.kde
+        SOURCES # using only public headers, to cover only public API
+            ${KCrash_HEADERS}
+        MD_MAINPAGE "${CMAKE_SOURCE_DIR}/README.md"
+        LINK_QCHS
+            Qt5Core_QCH
+        BLANK_MACROS
+            KCRASH_EXPORT
+            KCRASH_DEPRECATED
+            KCRASH_DEPRECATED_EXPORT
+        TAGFILE_INSTALL_DESTINATION ${KDE_INSTALL_QTQCHDIR}
+        QCH_INSTALL_DESTINATION ${KDE_INSTALL_QTQCHDIR}
+        COMPONENT Devel
+    )
+endif()
+
 include(ECMGeneratePriFile)
 ecm_generate_pri_file(BASE_NAME KCrash LIB_NAME KF5Crash DEPS "core" FILENAME_VAR PRI_FILENAME INCLUDE_INSTALL_DIR ${KDE_INSTALL_INCLUDEDIR_KF5}/KCrash)
 install(FILES ${PRI_FILENAME} DESTINATION ${ECM_MKSPECS_INSTALL_DIR})
