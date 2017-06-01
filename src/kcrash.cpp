@@ -101,7 +101,7 @@ static int s_autoRestartArgc = 0;
 static char **s_autoRestartCommandLine = nullptr;
 static char *s_drkonqiPath = nullptr;
 static char *s_kdeinit_socket_file = nullptr;
-static KCrash::CrashFlags s_flags = nullptr;
+static KCrash::CrashFlags s_flags = KCrash::CrashFlags();
 static int s_launchDrKonqi = -1; // -1=initial value 0=disabled 1=enabled
 Q_GLOBAL_STATIC(KCrash::CoreConfig, s_coreConfig)
 
