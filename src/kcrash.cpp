@@ -260,40 +260,38 @@ bool KCrash::isDrKonqiEnabled()
 
 // The following functions copy&pasted from kinit/wrapper.cpp :
 // (which copied it from kdeinit/kinit.cpp)
+// Can't use QGuiApplication::platformName() here, there is no app instance.
+#if HAVE_X11 || HAVE_XCB
 static const char* displayEnvVarName_c()
 {
-    // Can't use QGuiApplication::platformName() here, there is no app instance.
-#if HAVE_X11
     return "DISPLAY";
-#elif defined(Q_OS_OSX)
-    return "MAC_DISPLAY";
-#elif defined(Q_OS_WIN)
-    return "WIN_DISPLAY";
-#endif
 }
+#endif
 
 // adapted from kdeinit/kinit.cpp
 // WARNING, if you change the socket name, adjust kinit.cpp too
 static const QString generate_socket_file_name()
 {
 
+#if HAVE_X11 || HAVE_XCB
     QByteArray display = qgetenv(displayEnvVarName_c());
     if (display.isEmpty()) {
-#if HAVE_X11
         fprintf(stderr, "Error: could not determine $%s.\n", displayEnvVarName_c());
         return QString();
-    } else {
-#endif
-        int i;
-        if ((i = display.lastIndexOf('.')) > display.lastIndexOf(':') && i >= 0) {
-            display.truncate(i);
-        }
-
-        display.replace(':', '_');
-#ifdef __APPLE__
-        display.replace('/', '_');
-#endif
     }
+    int i;
+    if ((i = display.lastIndexOf('.')) > display.lastIndexOf(':') && i >= 0) {
+        display.truncate(i);
+    }
+
+    display.replace(':', '_');
+#ifdef __APPLE__
+    display.replace('/', '_');
+#endif
+#else
+    // not using a DISPLAY variable; use an empty string instead
+    QByteArray display = "";
+#endif
     const QString socketFileName = QString::fromLatin1("kdeinit5_%1").arg(QLatin1String(display));
     return socketFileName;
 }
