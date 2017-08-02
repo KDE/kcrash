@@ -30,6 +30,8 @@ private Q_SLOTS:
     void initTestCase() {
         // Don't bring up drkonqi
         qputenv("KDE_DEBUG", "1");
+        // change to the bin dir
+        QDir::setCurrent(QCoreApplication::applicationDirPath());
     }
     void testAutoRestart();
     void testEmergencySave();
