@@ -67,6 +67,7 @@ static void startCrasher(const QByteArray &flag, const QByteArray &expectedOutpu
     QProcessEnvironment env = QProcessEnvironment::systemEnvironment();
     env.insert(QStringLiteral("ASAN_OPTIONS"), QStringLiteral("handle_segv=0,poison_heap=0")); // Disable ASAN
     proc.setProcessEnvironment(env);
+    proc.setProcessChannelMode(QProcess::ForwardedChannels);
     proc.start(processName, QStringList() << flag);
     bool ok = proc.waitForFinished();
     QVERIFY(ok);
@@ -90,7 +91,7 @@ void KCrashTest::testAutoRestart() // use kdeinit if possible, otherwise directl
 
 void KCrashTest::testAutoRestartDirectly() // test directly (so a developer can test the CI case)
 {
-    startCrasher("ARD", "starting ARD\nautorestarted AR\n");
+    startCrasher("ARD", "starting ARD\nautorestarted ARD\n");
 }
 
 void KCrashTest::testEmergencySave()
