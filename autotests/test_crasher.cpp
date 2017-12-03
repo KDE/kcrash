@@ -43,6 +43,8 @@ int main(int argc, char **argv)
 
     if (flag == "AR") { // auto restart
         KCrash::setFlags(KCrash::AutoRestart);
+    } else if (flag == "ARD") { // auto restart, always directly
+        KCrash::setFlags(KCrash::AutoRestart | KCrash::AlwaysDirectly);
     } else if (flag == "ES") { // emergency save
         KCrash::setEmergencySaveFunction(saveFunction);
     }

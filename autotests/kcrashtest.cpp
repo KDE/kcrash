@@ -34,6 +34,7 @@ private Q_SLOTS:
         QDir::setCurrent(QCoreApplication::applicationDirPath());
     }
     void testAutoRestart();
+    void testAutoRestartDirectly();
     void testEmergencySave();
 
 };
@@ -82,9 +83,14 @@ static void startCrasher(const QByteArray &flag, const QByteArray &expectedOutpu
     QCOMPARE(QString(logData), QString(expectedOutput));
 }
 
-void KCrashTest::testAutoRestart()
+void KCrashTest::testAutoRestart() // use kdeinit if possible, otherwise directly (ex: on CI)
 {
     startCrasher("AR", "starting AR\nautorestarted AR\n");
+}
+
+void KCrashTest::testAutoRestartDirectly() // test directly (so a developer can test the CI case)
+{
+    startCrasher("ARD", "starting ARD\nautorestarted AR\n");
 }
 
 void KCrashTest::testEmergencySave()
