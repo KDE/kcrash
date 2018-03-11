@@ -48,8 +48,8 @@
 
 #include <QDebug>
 #include <QGuiApplication>
-#include <QtCore/QFileInfo>
-#include <QtCore/QDir>
+#include <QFileInfo>
+#include <QDir>
 #include <QStandardPaths>
 #include <QThread>
 #include <QLibraryInfo>
