@@ -174,7 +174,7 @@ public:
         startTimer(10000); // 10 s
     }
 protected:
-    void timerEvent(QTimerEvent *event) Q_DECL_OVERRIDE
+    void timerEvent(QTimerEvent *event) override 
     {
         if (!s_crashHandler) { // not set meanwhile
             KCrash::setCrashHandler(KCrash::defaultCrashHandler);
