@@ -62,7 +62,7 @@ if (EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/po)
 endif()
 
 add_definitions(-DQT_NO_NARROWING_CONVERSIONS_IN_CONNECT)
-add_definitions(-DQT_DISABLE_DEPRECATED_BEFORE=0x060000)
+add_definitions(-DQT_DISABLE_DEPRECATED_BEFORE=0x050800)
 
 add_subdirectory(src)
 add_subdirectory(autotests)
