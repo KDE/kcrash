@@ -65,7 +65,9 @@ add_definitions(-DQT_NO_NARROWING_CONVERSIONS_IN_CONNECT)
 add_definitions(-DQT_DISABLE_DEPRECATED_BEFORE=0x050800)
 
 add_subdirectory(src)
-add_subdirectory(autotests)
+if (BUILD_TESTING)
+    add_subdirectory(autotests)
+endif()
 
 # create a Config.cmake and a ConfigVersion.cmake file and install them
 set(CMAKECONFIG_INSTALL_DIR "${KDE_INSTALL_CMAKEPACKAGEDIR}/KF5Crash")
