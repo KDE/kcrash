@@ -61,7 +61,7 @@ if (EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/po)
   ecm_install_po_files_as_qm(po)
 endif()
 
-add_definitions(-DQT_NO_NARROWING_CONVERSIONS_IN_CONNECT)
+
 add_definitions(-DQT_DISABLE_DEPRECATED_BEFORE=0x050800)
 add_definitions(-DQT_NO_CAST_FROM_ASCII)
 add_definitions(-DQT_NO_CAST_TO_ASCII)
