@@ -135,7 +135,10 @@ void KCrash::initialize()
         qCDebug(LOG_KCRASH) << "KCrash disabled through environment.";
     }
 
-    KCrash::setApplicationFilePath(QCoreApplication::applicationFilePath());
+    if (QCoreApplication::instance())
+        KCrash::setApplicationFilePath(QCoreApplication::applicationFilePath());
+    else
+        qWarning() << "This process needs a QCoreApplication instance in order to use KCrash";
 
     s_coreConfig(); // Initialize.
 }
