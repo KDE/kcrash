@@ -218,14 +218,16 @@ void KCrash::setApplicationFilePath(const QString &filePath)
     s_autoRestartCommand = qstrdup(QFile::encodeName(filePath).constData());
 
     QStringList args = QCoreApplication::arguments();
-    args[0] = filePath; // replace argv[0] with full path above
-    delete[] s_autoRestartCommandLine;
-    s_autoRestartArgc = args.count();
-    s_autoRestartCommandLine = new char *[args.count() + 1];
-    for (int i = 0; i < args.count(); ++i) {
-        s_autoRestartCommandLine[i] = qstrdup(QFile::encodeName(args.at(i)).constData());
+    if (!args.isEmpty()) { // edge case: tst_QX11Info::startupId does QApplication app(argc, nullptr)...
+        args[0] = filePath; // replace argv[0] with full path above
+        delete[] s_autoRestartCommandLine;
+        s_autoRestartArgc = args.count();
+        s_autoRestartCommandLine = new char *[args.count() + 1];
+        for (int i = 0; i < args.count(); ++i) {
+            s_autoRestartCommandLine[i] = qstrdup(QFile::encodeName(args.at(i)).constData());
+        }
+        s_autoRestartCommandLine[args.count()] = nullptr;
     }
-    s_autoRestartCommandLine[args.count()] = nullptr;
 }
 
 void KCrash::setDrKonqiEnabled(bool enabled)
