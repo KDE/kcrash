@@ -659,9 +659,10 @@ static bool startProcessInternal(int argc, const char *argv[], bool waitAndExit,
         // when launching drkonqi. Note that DrKonqi will SIGSTOP this process in the meantime
         // and only send SIGCONT when it is about to attach a debugger.
 #ifdef Q_OS_LINUX
-        // Declare the process that will be debugging the crashed KDE app (#245529)
+        // Declare the process that will be debugging the crashed KDE app (#245529).
         // For now that will be DrKonqi, which may ask to transfer the ptrace scope to
-        // a debugger using a socket.
+        // a debugger it is not an ancestor of (because it was started via kdeinit or
+        // KProcess::startDetached()) using a socket.
 #ifndef PR_SET_PTRACER
 # define PR_SET_PTRACER 0x59616d61
 #endif
