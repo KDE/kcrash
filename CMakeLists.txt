@@ -40,14 +40,7 @@ ecm_setup_version(PROJECT VARIABLE_PREFIX KCrash
 find_package(KF5CoreAddons ${KF5_DEP_VERSION} REQUIRED)
 find_package(KF5WindowSystem ${KF5_DEP_VERSION} REQUIRED)
 
-# On KF5.29 we want kernel pattern raising to be default, so automate the
-# switch.
-# This can be savely removed for KF5.29+
 set(KCRASH_CORE_PATTERN_RAISE_DEFAULT ON)
-if(${KF5_VERSION} VERSION_LESS "5.29.0")
-    set(KCRASH_CORE_PATTERN_RAISE_DEFAULT OFF)
-    set(FEATURE_ADDENDUM "This will be enabled by default in 5.29.")
-endif()
 
 option(KCRASH_CORE_PATTERN_RAISE
     "Enables raising signals to kernel core patterns (iff the pattern is a process). You may wish to not intall drkonqi if this can cause a UI conflict."
