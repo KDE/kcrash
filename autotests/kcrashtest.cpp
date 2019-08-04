@@ -20,7 +20,6 @@
 #include <QProcess>
 #include <QFile>
 #include <QTest>
-#include <QSignalSpy>
 #include <QDebug>
 
 class KCrashTest : public QObject

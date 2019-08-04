@@ -49,11 +49,10 @@
 
 #include <QDebug>
 #include <QGuiApplication>
-#include <QFileInfo>
-#include <QDir>
 #include <QStandardPaths>
 #include <QThread>
 #include <QLibraryInfo>
+#include <QFile>
 
 #include <QLoggingCategory>
 Q_DECLARE_LOGGING_CATEGORY(LOG_KCRASH)
