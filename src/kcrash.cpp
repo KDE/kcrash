@@ -128,7 +128,8 @@ void KCrash::initialize()
     }
     const QStringList args = QCoreApplication::arguments();
     if (!qEnvironmentVariableIsSet("KDE_DEBUG")
-        && !qEnvironmentVariableIsSet("KCRASH_AUTO_RESTARTED")) {
+        && !qEnvironmentVariableIsSet("KCRASH_AUTO_RESTARTED")
+        && !qEnvironmentVariableIntValue("RUNNING_UNDER_RR")) {
         // enable drkonqi
         KCrash::setDrKonqiEnabled(true);
     } else {
