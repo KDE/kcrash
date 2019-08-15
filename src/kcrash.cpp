@@ -107,6 +107,39 @@ Q_GLOBAL_STATIC(KCrash::CoreConfig, s_coreConfig)
 
 static void kcrashInitialize()
 {
+
+    // Static because in some cases this is called multiple times
+    // but if an application had any of the bad cases we always want
+    // to skip the check
+    static bool doAutoInitKCrash = true;
+
+    if (!doAutoInitKCrash) {
+        return;
+    }
+
+    QCoreApplication *app = QCoreApplication::instance();
+    if (!app) {
+        doAutoInitKCrash = false;
+        return;
+    }
+
+    if (!QCoreApplication::startingUp()) {
+        // If the app has already started, this means we're not being run as part of
+        // qt_call_pre_routines, which most probably means that we're being run as part
+        // of KCrash being loaded as part of some plugin of the app, so don't
+        // do any magic
+        doAutoInitKCrash = false;
+        return;
+    }
+
+    if (!QCoreApplication::eventDispatcher()) {
+        // We are called with event dispatcher being null when KCrash is being loaded
+        // through plasma-integration instead of being linked to the app (i.e. QtCreator vs Okular)
+        // For apps that don't link directly to KCrash do not do the magic
+        doAutoInitKCrash = false;
+        return;
+    }
+
     KCrash::initialize();
 }
 Q_COREAPP_STARTUP_FUNCTION(kcrashInitialize)
