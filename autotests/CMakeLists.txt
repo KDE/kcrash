@@ -30,6 +30,8 @@ if(NOT WIN32)
     target_link_libraries(test_crasher Qt5::Widgets KF5::Crash)
     ecm_mark_as_test(test_crasher)
     ecm_mark_nongui_executable(test_crasher)
+
+    add_dependencies(kcrashtest test_crasher)
 endif()
 
 ecm_add_tests(
