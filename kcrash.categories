@@ -1,2 +1,0 @@
-# Logging categories (for kdebugsettings)
-org.kde.kcrash KCrash DEFAULT_SEVERITY [INFO] IDENTIFIER [LOG_KCRASH]

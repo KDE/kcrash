@@ -10,6 +10,13 @@ configure_file(
     ${CMAKE_CURRENT_BINARY_DIR}/config-kcrash.h
 )
 
+ecm_qt_export_logging_category(
+    IDENTIFIER LOG_KCRASH
+    CATEGORY_NAME org.kde.kcrash
+    DESCRIPTION "KCrash"
+    EXPORT KCRASH
+)
+
 add_library(KF5Crash ${kcrash_SRCS})
 generate_export_header(KF5Crash BASE_NAME KCrash)
 add_library(KF5::Crash ALIAS KF5Crash)
@@ -44,6 +51,12 @@ install(FILES
   ${CMAKE_CURRENT_BINARY_DIR}/kcrash_export.h
   ${KCrash_HEADERS}
   DESTINATION ${KDE_INSTALL_INCLUDEDIR_KF5}/KCrash COMPONENT Devel
+)
+
+ecm_qt_install_logging_categories(
+    EXPORT KCRASH
+    FILE kcrash.categories
+    DESTINATION ${KDE_INSTALL_LOGGINGCATEGORIESDIR}
 )
 
 if(BUILD_QCH)
