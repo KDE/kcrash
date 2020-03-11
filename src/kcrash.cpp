@@ -103,6 +103,8 @@ static char *s_drkonqiPath = nullptr;
 static char *s_kdeinit_socket_file = nullptr;
 static KCrash::CrashFlags s_flags = KCrash::CrashFlags();
 static int s_launchDrKonqi = -1; // -1=initial value 0=disabled 1=enabled
+
+static char *s_kcrashErrorMessage = nullptr;
 Q_GLOBAL_STATIC(KCrash::CoreConfig, s_coreConfig)
 
 static void kcrashInitialize()
@@ -985,6 +987,12 @@ static int pollDrKonqiSocket(pid_t pid, int sockfd)
     close(clsockfd);
 
     return 1;
+}
+
+void KCrash::setErrorMessage(const QString &message)
+{
+    free(s_kcrashErrorMessage);
+    s_kcrashErrorMessage = qstrdup(message.toUtf8().constData());
 }
 
 #endif

@@ -154,6 +154,14 @@ KCRASH_EXPORT void setDrKonqiEnabled(bool enabled);
  * @since 4.5
  */
 KCRASH_EXPORT bool isDrKonqiEnabled();
+
+/**
+ * Allows providing information to be included in the bug report.
+ *
+ * @since 5.69
+ */
+KCRASH_EXPORT void setErrorMessage(const QString &message);
+
 }
 
 Q_DECLARE_OPERATORS_FOR_FLAGS(KCrash::CrashFlags)
