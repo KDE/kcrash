@@ -989,12 +989,12 @@ static int pollDrKonqiSocket(pid_t pid, int sockfd)
     return 1;
 }
 
+#endif
+
+#endif // Q_OS_UNIX
+
 void KCrash::setErrorMessage(const QString &message)
 {
     free(s_kcrashErrorMessage);
     s_kcrashErrorMessage = qstrdup(message.toUtf8().constData());
 }
-
-#endif
-
-#endif // Q_OS_UNIX
