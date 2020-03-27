@@ -100,7 +100,6 @@ static char *s_appPath = nullptr;
 static int s_autoRestartArgc = 0;
 static char **s_autoRestartCommandLine = nullptr;
 static char *s_drkonqiPath = nullptr;
-static char *s_kdeinit_socket_file = nullptr;
 static KCrash::CrashFlags s_flags = KCrash::CrashFlags();
 static int s_launchDrKonqi = -1; // -1=initial value 0=disabled 1=enabled
 
@@ -314,45 +313,9 @@ static const char* displayEnvVarName_c()
 }
 #endif
 
-// adapted from kdeinit/kinit.cpp
-// WARNING, if you change the socket name, adjust kinit.cpp too
-static const QString generate_socket_file_name()
-{
-
-#if HAVE_X11 || HAVE_XCB
-    QByteArray display = qgetenv(displayEnvVarName_c());
-    if (display.isEmpty()) {
-        fprintf(stderr, "Error: could not determine $%s.\n", displayEnvVarName_c());
-        return QString();
-    }
-    int i;
-    if ((i = display.lastIndexOf('.')) > display.lastIndexOf(':') && i >= 0) {
-        display.truncate(i);
-    }
-
-    display.replace(':', '_');
-#ifdef __APPLE__
-    display.replace('/', '_');
-#endif
-#else
-    // not using a DISPLAY variable; use an empty string instead
-    QByteArray display = "";
-#endif
-    const QString socketFileName = QString::fromLatin1("kdeinit5_%1").arg(QLatin1String(display));
-    return socketFileName;
-}
-
 void
 KCrash::setCrashHandler(HandlerType handler)
 {
-    if (!s_kdeinit_socket_file) {
-        // Prepare this now to avoid mallocs in the crash handler.
-        const QString socketFileName = generate_socket_file_name();
-        QByteArray socketName = QFile::encodeName(QStandardPaths::writableLocation(QStandardPaths::RuntimeLocation) +
-                                QLatin1Char('/') + socketFileName);
-        s_kdeinit_socket_file = qstrdup(socketName.constData());
-    }
-
 #if defined(Q_OS_WIN)
     static LPTOP_LEVEL_EXCEPTION_FILTER s_previousExceptionFilter = NULL;
 
@@ -651,12 +614,9 @@ LONG WINAPI KCrash::win32UnhandledExceptionFilter(_EXCEPTION_POINTERS *exception
 }
 #else
 
-static bool startProcessInternal(int argc, const char *argv[], bool waitAndExit, bool directly);
-static pid_t startFromKdeinit(int argc, const char *argv[]);
 static pid_t startDirectly(const char *argv[]);
 static int write_socket(int sock, char *buffer, int len);
 static int read_socket(int sock, char *buffer, int len);
-static int openSocket();
 
 #ifdef Q_OS_LINUX
 static int openDrKonqiSocket(const QByteArray &socketpath);
@@ -665,29 +625,9 @@ static int pollDrKonqiSocket(pid_t pid, int sockfd);
 
 void KCrash::startProcess(int argc, const char *argv[], bool waitAndExit)
 {
-    bool startDirectly = true;
+    fprintf(stderr, "KCrash: Attempting to start %s\n", argv[0]);
 
-#ifndef Q_OS_OSX
-    // First try to start the app via kdeinit, if the AlwaysDirectly flag hasn't been specified.
-    // This is done because it is dangerous to use fork() in the crash handler
-    // (there can be functions registered to be performed before fork(), for example handling
-    // of malloc locking, which doesn't work when malloc crashes because of heap corruption).
-    if (!(s_flags & AlwaysDirectly)) {
-        startDirectly = !startProcessInternal(argc, argv, waitAndExit, false);
-    }
-#endif
-
-    // If we can't reach kdeinit, we can still at least try to fork()
-    if (startDirectly) {
-        startProcessInternal(argc, argv, waitAndExit, true);
-    }
-}
-
-static bool startProcessInternal(int argc, const char *argv[], bool waitAndExit, bool directly)
-{
-    fprintf(stderr, "KCrash: Attempting to start %s %s\n", argv[0], directly ? "directly" : "from kdeinit");
-
-    pid_t pid = directly ? startDirectly(argv) : startFromKdeinit(argc, argv);
+    pid_t pid = startDirectly(argv);
 
     if (pid > 0 && waitAndExit) {
         // Seems we made it....
@@ -715,94 +655,21 @@ static bool startProcessInternal(int argc, const char *argv[], bool waitAndExit,
 
         if (sockfd >= 0) {
             // Wait while DrKonqi is running and the socket connection exists
-            if (directly) {
-                // If the process was started directly, use waitpid(), as it's a child...
-                while ((running = waitpid(pid, nullptr, WNOHANG) != pid) && pollDrKonqiSocket(pid, sockfd) >= 0) {}
-            } else {
-                // ... else poll its status using kill()
-                while ((running = kill(pid, 0) >= 0) && pollDrKonqiSocket(pid, sockfd) >= 0) {}
-            }
+            // If the process was started directly, use waitpid(), as it's a child...
+            while ((running = waitpid(pid, nullptr, WNOHANG) != pid) && pollDrKonqiSocket(pid, sockfd) >= 0) {}
             close(sockfd);
             unlink(socketpath.constData());
         }
 #endif
         if (running) {
-            if (directly) {
-                // If the process was started directly, use waitpid(), as it's a child...
-                while (waitpid(pid, nullptr, 0) != pid) {}
-            } else {
-                // ... else poll its status using kill()
-                while (kill(pid, 0) >= 0) {
-                    sleep(1);
-                }
-            }
+            // If the process was started directly, use waitpid(), as it's a child...
+            while (waitpid(pid, nullptr, 0) != pid) {}
         }
         if (!s_coreConfig->isProcess()) {
             // Only exit if we don't forward to core dumps
             _exit(253);
         }
     }
-
-    return (pid > 0); //return true on success
-}
-
-static pid_t startFromKdeinit(int argc, const char *argv[])
-{
-    int socket = openSocket();
-    if (socket < -1) {
-        return 0;
-    }
-    kcrash_launcher_header header;
-    header.cmd = LAUNCHER_EXEC_NEW;
-    const int BUFSIZE = 8192; // make sure this is big enough
-    const int CWDSIZE = 2000;
-    char buffer[ BUFSIZE + 10 + 24 /*the env var*/ + CWDSIZE+1 ];
-    int pos = 0;
-    long argcl = argc;
-    memcpy(buffer + pos, &argcl, sizeof(argcl));
-    pos += sizeof(argcl);
-    for (int i = 0;
-            i < argc;
-            ++i) {
-        int len = strlen(argv[ i ]) + 1;   // include terminating \0
-        if (pos + len >= BUFSIZE) {
-            fprintf(stderr, "BUFSIZE in KCrash not big enough!\n");
-            return 0;
-        }
-        memcpy(buffer + pos, argv[ i ], len);
-        pos += len;
-    }
-
-    long env = 1; // 1 env var
-    memcpy(buffer + pos, &env, sizeof(env));
-    pos += sizeof(env);
-    static const char s_envVar[] = "KCRASH_AUTO_RESTARTED=1";
-    int len = strlen(s_envVar) + 1;
-    memcpy(buffer + pos, s_envVar, len);
-    pos += len;
-
-    long avoid_loops = 0;
-    memcpy(buffer + pos, &avoid_loops, sizeof(avoid_loops));
-    pos += sizeof(avoid_loops);
-
-    char cwd[CWDSIZE];
-    if (getcwd(cwd, CWDSIZE-1)) {
-        len = strlen(cwd) + 1; // include terminating \0
-        memcpy(buffer + pos, cwd, len);
-        pos += len;
-    }
-
-    header.arg_length = pos;
-    write_socket(socket, (char *) &header, sizeof(header));
-    write_socket(socket, buffer, pos);
-
-    if (read_socket(socket, (char *) &header, sizeof(header)) < 0
-            || header.cmd != LAUNCHER_OK) {
-        return 0;
-    }
-    long pid;
-    read_socket(socket, (char *) &pid, sizeof(pid));
-    return static_cast<pid_t>(pid);
 }
 
 static pid_t startDirectly(const char *argv[])
@@ -871,38 +738,6 @@ static int read_socket(int sock, char *buffer, int len)
         }
     }
     return 0;
-}
-
-static int openSocket()
-{
-    struct sockaddr_un server;
-    if (!s_kdeinit_socket_file ||
-        strlen(s_kdeinit_socket_file) > (sizeof(server.sun_path) - 1))
-    {
-        fprintf(stderr, "kcrash: Unable to communicate with kdeinit5, socket name is %s!",
-                (s_kdeinit_socket_file) ? "too long" : "undefined");
-        return -1;
-    }
-
-    /*
-     * create the socket stream
-     */
-    int s = socket(PF_UNIX, SOCK_STREAM, 0);
-    if (s < 0) {
-        perror("Warning: socket() failed: ");
-        return -1;
-    }
-
-    server.sun_family = AF_UNIX;
-    strcpy(server.sun_path, s_kdeinit_socket_file);
-    printf("sock_file=%s\n", s_kdeinit_socket_file);
-    kde_socklen_t socklen = sizeof(server);
-    if (connect(s, (struct sockaddr *)&server, socklen) == -1) {
-        perror("Warning: connect() failed: ");
-        close(s);
-        return -1;
-    }
-    return s;
 }
 
 #ifdef Q_OS_LINUX
