@@ -167,7 +167,8 @@ void KCrash::initialize()
         // enable drkonqi
         KCrash::setDrKonqiEnabled(true);
     } else {
-        qCDebug(LOG_KCRASH) << "KCrash disabled through environment.";
+        // This loads qtlogging.ini very early which prevents unittests from doing QStandardPaths::setTestModeEnabled(true) in initTestCase()
+        //qCDebug(LOG_KCRASH) << "KCrash disabled through environment.";
     }
 
     if (QCoreApplication::instance()) {
