@@ -444,7 +444,7 @@ KCrash::defaultCrashHandler(int sig)
             return;
         }
 
-        const char *argv[29];  // don't forget to update this
+        const char *argv[31];  // don't forget to update this
         int i = 0;
 
         // argument 0 has to be drkonqi
@@ -470,6 +470,12 @@ KCrash::defaultCrashHandler(int sig)
 
         argv[i++] = "--appname";
         argv[i++] = s_appName ? s_appName : "<unknown>";
+
+        const QByteArray desktopName = QGuiApplication::desktopFileName().toUtf8();
+        if (!desktopName.isEmpty()) {
+            argv[i++] = "--desktop-name";
+            argv[i++] = desktopName.constData();
+        }
 
         if (loadedByKdeinit) {
             argv[i++] = "--kdeinit";
