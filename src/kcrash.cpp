@@ -90,7 +90,11 @@ namespace KCrash
 {
 KCRASH_EXPORT bool loadedByKdeinit = false;
 void setApplicationFilePath(const QString &filePath);
+        // Create socket path to transfer ptrace scope and open connection
 }
+#ifdef Q_OS_LINUX
+static QByteArray s_socketpath;
+#endif
 
 static KCrash::HandlerType s_emergencySaveFunction = nullptr;
 static KCrash::HandlerType s_crashHandler = nullptr;
@@ -176,6 +180,13 @@ void KCrash::initialize()
     } else {
         qWarning() << "This process needs a QCoreApplication instance in order to use KCrash";
     }
+
+#ifdef Q_OS_LINUX
+    // Create socket path to transfer ptrace scope and open connection
+    s_socketpath = QFile::encodeName(
+            QStringLiteral("%1/kcrash_%2").arg(QStandardPaths::writableLocation(QStandardPaths::RuntimeLocation))
+                                          .arg(getpid()));
+#endif
 
     s_coreConfig(); // Initialize.
 }
@@ -648,18 +659,14 @@ void KCrash::startProcess(int argc, const char *argv[], bool waitAndExit)
 #endif
         prctl(PR_SET_PTRACER, pid, 0, 0, 0);
 
-        // Create socket path to transfer ptrace scope and open connection
-        const QByteArray socketpath = QFile::encodeName(
-            QStringLiteral("%1/kcrash_%2").arg(QStandardPaths::writableLocation(QStandardPaths::RuntimeLocation))
-                                          .arg(getpid()));
-        int sockfd = openDrKonqiSocket(socketpath);
+        int sockfd = openDrKonqiSocket(s_socketpath);
 
         if (sockfd >= 0) {
             // Wait while DrKonqi is running and the socket connection exists
             // If the process was started directly, use waitpid(), as it's a child...
             while ((running = waitpid(pid, nullptr, WNOHANG) != pid) && pollDrKonqiSocket(pid, sockfd) >= 0) {}
             close(sockfd);
-            unlink(socketpath.constData());
+            unlink(s_socketpath.constData());
         }
 #endif
         if (running) {
