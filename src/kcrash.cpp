@@ -102,7 +102,7 @@ static char *s_appName = nullptr;
 static char *s_autoRestartCommand = nullptr;
 static char *s_appPath = nullptr;
 static int s_autoRestartArgc = 0;
-static char **s_autoRestartCommandLine = nullptr;
+static char **s_autoRestartCommandLine = new char*[1]{ nullptr };
 static char *s_drkonqiPath = nullptr;
 static KCrash::CrashFlags s_flags = KCrash::CrashFlags();
 static int s_launchDrKonqi = -1; // -1=initial value 0=disabled 1=enabled
@@ -265,16 +265,22 @@ void KCrash::setApplicationFilePath(const QString &filePath)
     s_autoRestartCommand = qstrdup(QFile::encodeName(filePath).constData());
 
     QStringList args = QCoreApplication::arguments();
-    if (!args.isEmpty()) { // edge case: tst_QX11Info::startupId does QApplication app(argc, nullptr)...
+    if (args.isEmpty()) { // edge case: tst_QX11Info::startupId does QApplication app(argc, nullptr)...
+        args.append(filePath);
+    } else {
         args[0] = filePath; // replace argv[0] with full path above
-        delete[] s_autoRestartCommandLine;
-        s_autoRestartArgc = args.count();
-        s_autoRestartCommandLine = new char *[args.count() + 1];
-        for (int i = 0; i < args.count(); ++i) {
-            s_autoRestartCommandLine[i] = qstrdup(QFile::encodeName(args.at(i)).constData());
-        }
-        s_autoRestartCommandLine[args.count()] = nullptr;
     }
+    for (int arg = 0; arg < s_autoRestartArgc; arg++) {
+        delete [] s_autoRestartCommandLine[arg];
+    }
+
+    delete[] s_autoRestartCommandLine;
+    s_autoRestartArgc = args.count();
+    s_autoRestartCommandLine = new char *[args.count() + 1];
+    for (int i = 0; i < args.count(); ++i) {
+        s_autoRestartCommandLine[i] = qstrdup(QFile::encodeName(args.at(i)).constData());
+    }
+    s_autoRestartCommandLine[args.count()] = nullptr;
 }
 
 void KCrash::setDrKonqiEnabled(bool enabled)
