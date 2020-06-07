@@ -2,8 +2,9 @@
     This file is part of the KDE Libraries
     SPDX-FileCopyrightText: 2000 Timo Hummel <timo.hummel@sap.com>
     SPDX-FileCopyrightText: 2000 Tom Braun <braunt@fh-konstanz.de>
-    SPDX-FileCopyrightText: 2009 Adriaan de Groot <groot@kde.org>
     SPDX-FileCopyrightText: 2010 George Kiagiadakis <kiagiadakis.george@gmail.com>
+    SPDX-FileCopyrightText: 2009 KDE e.V. <kde-ev-board@kde.org> 
+    SPDX-FileContributor: 2009 Adriaan de Groot <groot@kde.org>
 
     SPDX-License-Identifier: LGPL-2.0-or-later
 */
