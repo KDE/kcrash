@@ -47,6 +47,9 @@
 #include <kaboutdata.h>
 #include <kstartupinfo.h>
 
+#include <array>
+#include <algorithm>
+
 #include <QDebug>
 #include <QGuiApplication>
 #include <QStandardPaths>
@@ -688,6 +691,21 @@ void KCrash::startProcess(int argc, const char *argv[], bool waitAndExit)
 
 static pid_t startDirectly(const char *argv[])
 {
+    char** environ_end;
+    for(environ_end = environ; *environ_end; ++environ_end) {}
+
+    std::array<const char*, 1024> environ_data; //hope it's big enough
+    if((unsigned)(environ_end - environ) +2 >= environ_data.size()) {
+        fprintf(stderr, "environ_data in KCrash not big enough!\n");
+        return 0;
+    }
+    auto end = std::copy_if(environ, environ_end, environ_data.begin(),
+                            [](const char* s) {
+                              static const char envvar[] = "KCRASH_AUTO_RESTARTED=";
+                              return strncmp(envvar, s, sizeof(envvar)-1) != 0;
+                            });
+    *end++ = "KCRASH_AUTO_RESTARTED=1";
+    *end++ = nullptr;
     pid_t pid = fork();
     switch (pid) {
     case -1:
@@ -701,8 +719,7 @@ static pid_t startDirectly(const char *argv[])
 #ifndef Q_OS_OSX
         closeAllFDs(); // We are in the child now. Close FDs unconditionally.
 #endif
-        setenv("KCRASH_AUTO_RESTARTED", "1", 1);
-        execvp(argv[0], const_cast< char ** >(argv));
+        execvpe(argv[0], const_cast< char ** >(argv), const_cast<char**> (environ_data.data()));
         fprintf(stderr, "KCrash failed to exec(), errno = %d\n", errno);
         _exit(253);
     default:
