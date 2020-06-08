@@ -678,6 +678,7 @@ void KCrash::startProcess(int argc, const char *argv[], bool waitAndExit)
 
 static pid_t startDirectly(const char *argv[])
 {
+    extern char **environ;
     char** environ_end;
     for(environ_end = environ; *environ_end; ++environ_end) {}
 
