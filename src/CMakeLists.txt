@@ -26,6 +26,14 @@ target_include_directories(KF5Crash INTERFACE "$<INSTALL_INTERFACE:${KDE_INSTALL
 target_link_libraries(KF5Crash PUBLIC Qt5::Core)
 target_link_libraries(KF5Crash PRIVATE KF5::CoreAddons KF5::WindowSystem)
 
+# FIXME: It is needed to work around undefined reference error on FreeBSD
+# caused by --no-undefined because the `environ' variable does not exist
+# in libc.so.7 -- it is in crt1.o, and so not available to shared
+# libraries. We just drop the normal no-undefined flag for library building
+# here, on the assumption that Linux CI will catch any *actual* undefineds.
+if (CMAKE_SYSTEM_NAME MATCHES "FreeBSD")
+    string(REPLACE "-Wl,--no-undefined" "" CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS}")
+endif ()
 
 if(${X11_FOUND})
   find_package(Qt5X11Extras ${REQUIRED_QT_VERSION} REQUIRED NO_MODULE)
