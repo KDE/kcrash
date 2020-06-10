@@ -676,9 +676,9 @@ void KCrash::startProcess(int argc, const char *argv[], bool waitAndExit)
     }
 }
 
+extern "C" char **environ;
 static pid_t startDirectly(const char *argv[])
 {
-    extern char **environ;
     char** environ_end;
     for(environ_end = environ; *environ_end; ++environ_end) {}
 
@@ -707,7 +707,7 @@ static pid_t startDirectly(const char *argv[])
 #ifndef Q_OS_OSX
         closeAllFDs(); // We are in the child now. Close FDs unconditionally.
 #endif
-        execvpe(argv[0], const_cast< char ** >(argv), const_cast<char**> (environ_data.data()));
+        execve(argv[0], const_cast< char ** >(argv), const_cast<char**> (environ_data.data()));
         fprintf(stderr, "KCrash failed to exec(), errno = %d\n", errno);
         _exit(253);
     default:
