@@ -31,7 +31,7 @@
 #include <sys/prctl.h>
 #endif
 
-#include <kaboutdata.h>
+#include <KAboutData>
 #include <kstartupinfo.h>
 
 #include <array>
