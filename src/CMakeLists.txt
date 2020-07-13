@@ -12,7 +12,8 @@ configure_file(
 
 ecm_qt_export_logging_category(
     IDENTIFIER LOG_KCRASH
-    CATEGORY_NAME org.kde.kcrash
+    CATEGORY_NAME kf.crash
+    OLD_CATEGORY_NAMES org.kde.kcrash
     DESCRIPTION "KCrash"
     EXPORT KCRASH
 )

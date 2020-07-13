@@ -48,7 +48,7 @@
 Q_DECLARE_LOGGING_CATEGORY(LOG_KCRASH)
 
 // logging category for this framework, default: log stuff >= info
-Q_LOGGING_CATEGORY(LOG_KCRASH, "org.kde.kcrash", QtInfoMsg)
+Q_LOGGING_CATEGORY(LOG_KCRASH, "kf.crash", QtInfoMsg)
 
 #if HAVE_X11
 #include <qx11info_x11.h>
