@@ -115,6 +115,7 @@ enum CrashFlag {
  * Stores a combination of #CrashFlag values.
  */
 Q_DECLARE_FLAGS(CrashFlags, CrashFlag)
+Q_DECLARE_OPERATORS_FOR_FLAGS(CrashFlags)
 
 /**
  * Set options to determine how the default crash handler should behave.
@@ -154,8 +155,6 @@ KCRASH_EXPORT bool isDrKonqiEnabled();
 KCRASH_EXPORT void setErrorMessage(const QString &message);
 
 }
-
-Q_DECLARE_OPERATORS_FOR_FLAGS(KCrash::CrashFlags)
 
 #endif
 
