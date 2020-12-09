@@ -36,6 +36,7 @@
 
 #include <array>
 #include <algorithm>
+#include <memory>
 
 #include <QDebug>
 #include <QGuiApplication>
@@ -86,18 +87,58 @@ void setApplicationFilePath(const QString &filePath);
 static QByteArray s_socketpath;
 #endif
 
+struct Args
+{
+    ~Args()
+    {
+        clear();
+    }
+
+    void clear()
+    {
+        if (!argc) {
+            return;
+        }
+
+        for (int i = 0; i < argc; ++i) {
+            delete[] argv[i];
+        }
+        delete[] argv;
+
+        argv = nullptr;
+        argc = 0;
+    }
+
+    void resize(int size)
+    {
+        clear();
+        argc = size;
+        argv = new char *[argc + 1];
+        for (int i = 0; i < argc + 1; ++i) {
+            argv[i] = nullptr;
+        }
+    }
+
+    explicit operator bool() const
+    {
+        return argc > 0;
+    }
+
+    int argc = 0;
+    // null-terminated array of null-terminated strings
+    char **argv = nullptr;
+};
+
 static KCrash::HandlerType s_emergencySaveFunction = nullptr;
 static KCrash::HandlerType s_crashHandler = nullptr;
-static char *s_appName = nullptr;
-static char *s_autoRestartCommand = nullptr;
-static char *s_appPath = nullptr;
-static int s_autoRestartArgc = 0;
-static char **s_autoRestartCommandLine = new char*[1]{ nullptr };
-static char *s_drkonqiPath = nullptr;
+static std::unique_ptr<char[]> s_appName;
+static std::unique_ptr<char[]> s_appPath;
+static Args s_autoRestartCommandLine;
+static std::unique_ptr<char[]> s_drkonqiPath;
 static KCrash::CrashFlags s_flags = KCrash::CrashFlags();
 static int s_launchDrKonqi = -1; // -1=initial value 0=disabled 1=enabled
 
-static char *s_kcrashErrorMessage = nullptr;
+static std::unique_ptr<char[]> s_kcrashErrorMessage;
 Q_GLOBAL_STATIC(KCrash::CoreConfig, s_coreConfig)
 
 static void kcrashInitialize()
@@ -247,30 +288,21 @@ void KCrash::setApplicationFilePath(const QString &filePath)
     const QString appName = filePath.mid(pos + 1);
     const QString appPath = filePath.left(pos); // could be empty, in theory
 
-    s_appName = qstrdup(QFile::encodeName(appName).constData());
-    s_appPath = qstrdup(QFile::encodeName(appPath).constData());
+    s_appName.reset(qstrdup(QFile::encodeName(appName).constData()));
+    s_appPath.reset(qstrdup(QFile::encodeName(appPath).constData()));
 
     // Prepare the auto-restart command
-    delete[] s_autoRestartCommand;
-    s_autoRestartCommand = qstrdup(QFile::encodeName(filePath).constData());
-
     QStringList args = QCoreApplication::arguments();
     if (args.isEmpty()) { // edge case: tst_QX11Info::startupId does QApplication app(argc, nullptr)...
         args.append(filePath);
     } else {
         args[0] = filePath; // replace argv[0] with full path above
     }
-    for (int arg = 0; arg < s_autoRestartArgc; arg++) {
-        delete [] s_autoRestartCommandLine[arg];
-    }
 
-    delete[] s_autoRestartCommandLine;
-    s_autoRestartArgc = args.count();
-    s_autoRestartCommandLine = new char *[args.count() + 1];
+    s_autoRestartCommandLine.resize(args.count());
     for (int i = 0; i < args.count(); ++i) {
-        s_autoRestartCommandLine[i] = qstrdup(QFile::encodeName(args.at(i)).constData());
+        s_autoRestartCommandLine.argv[i] = qstrdup(QFile::encodeName(args.at(i)).constData());
     }
-    s_autoRestartCommandLine[args.count()] = nullptr;
 }
 
 void KCrash::setDrKonqiEnabled(bool enabled)
@@ -296,7 +328,7 @@ void KCrash::setDrKonqiEnabled(bool enabled)
             qCDebug(LOG_KCRASH) << "Could not find drkonqi in search paths:" << paths;
             s_launchDrKonqi = 0;
         } else {
-            s_drkonqiPath = qstrdup(qPrintable(exec));
+            s_drkonqiPath.reset(qstrdup(qPrintable(exec)));
         }
     }
 
@@ -310,16 +342,6 @@ bool KCrash::isDrKonqiEnabled()
 {
     return s_launchDrKonqi == 1;
 }
-
-// The following functions copy&pasted from kinit/wrapper.cpp :
-// (which copied it from kdeinit/kinit.cpp)
-// Can't use QGuiApplication::platformName() here, there is no app instance.
-#if HAVE_X11 || HAVE_XCB
-static const char* displayEnvVarName_c()
-{
-    return "DISPLAY";
-}
-#endif
 
 void
 KCrash::setCrashHandler(HandlerType handler)
@@ -408,9 +430,9 @@ KCrash::defaultCrashHandler(int sig)
         if (s_emergencySaveFunction) {
             s_emergencySaveFunction(sig);
         }
-        if ((s_flags & AutoRestart) && s_autoRestartCommand) {
+        if ((s_flags & AutoRestart) && s_autoRestartCommandLine) {
             QThread::sleep(1);
-            startProcess(s_autoRestartArgc, const_cast<const char **>(s_autoRestartCommandLine), false);
+            startProcess(s_autoRestartCommandLine.argc, const_cast<const char **>(s_autoRestartCommandLine.argv), false);
         }
         crashRecursionCounter++;
     }
@@ -431,16 +453,16 @@ KCrash::defaultCrashHandler(int sig)
         fprintf(stderr, "KCrash: crashing... crashRecursionCounter = %d\n",
                 crashRecursionCounter);
         fprintf(stderr, "KCrash: Application Name = %s path = %s pid = %lld\n",
-                s_appName ? s_appName : "<unknown>",
-                s_appPath ? s_appPath : "<unknown>", QCoreApplication::applicationPid());
+                s_appName ? s_appName.get() : "<unknown>",
+                s_appPath ? s_appPath.get() : "<unknown>", QCoreApplication::applicationPid());
         fprintf(stderr, "KCrash: Arguments: ");
-        for (int i = 0; s_autoRestartCommandLine[i]; ++i) {
-            fprintf(stderr, "%s ", s_autoRestartCommandLine[i]);
+        for (int i = 0; i < s_autoRestartCommandLine.argc; ++i) {
+            fprintf(stderr, "%s ", s_autoRestartCommandLine.argv[i]);
         }
         fprintf(stderr, "\n");
 #else
         fprintf(stderr, "KCrash: Application '%s' crashing...\n",
-                s_appName ? s_appName : "<unknown>");
+                s_appName ? s_appName.get() : "<unknown>");
 #endif
 
         if (s_launchDrKonqi != 1) {
@@ -455,7 +477,7 @@ KCrash::defaultCrashHandler(int sig)
         int i = 0;
 
         // argument 0 has to be drkonqi
-        argv[i++] = s_drkonqiPath;
+        argv[i++] = s_drkonqiPath.get();
 
         const QByteArray platformName = QGuiApplication::platformName().toUtf8();
         if (!platformName.isEmpty()) {
@@ -476,16 +498,16 @@ KCrash::defaultCrashHandler(int sig)
 #endif
 
         argv[i++] = "--appname";
-        argv[i++] = s_appName ? s_appName : "<unknown>";
+        argv[i++] = s_appName ? s_appName.get() : "<unknown>";
 
         if (loadedByKdeinit) {
             argv[i++] = "--kdeinit";
         }
 
         // only add apppath if it's not NULL
-        if (s_appPath && *s_appPath) {
+        if (s_appPath && s_appPath[0]) {
             argv[i++] = "--apppath";
-            argv[i++] = s_appPath;
+            argv[i++] = s_appPath.get();
         }
 
         // signal number -- will never be NULL
@@ -528,7 +550,7 @@ KCrash::defaultCrashHandler(int sig)
             argv[i++] = "--safer";
         }
 
-        if ((s_flags & AutoRestart) && s_autoRestartCommand) {
+        if ((s_flags & AutoRestart) && s_autoRestartCommandLine) {
             argv[i++] = "--restarted";    //tell drkonqi if the app has been restarted
         }
 
@@ -633,6 +655,7 @@ static int pollDrKonqiSocket(pid_t pid, int sockfd);
 
 void KCrash::startProcess(int argc, const char *argv[], bool waitAndExit)
 {
+    Q_UNUSED(argc);
     fprintf(stderr, "KCrash: Attempting to start %s\n", argv[0]);
 
     pid_t pid = startDirectly(argv);
@@ -849,6 +872,5 @@ static int pollDrKonqiSocket(pid_t pid, int sockfd)
 
 void KCrash::setErrorMessage(const QString &message)
 {
-    free(s_kcrashErrorMessage);
-    s_kcrashErrorMessage = qstrdup(message.toUtf8().constData());
+    s_kcrashErrorMessage.reset(qstrdup(message.toUtf8().constData()));
 }
