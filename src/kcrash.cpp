@@ -315,11 +315,7 @@ void KCrash::setDrKonqiEnabled(bool enabled)
     if (s_launchDrKonqi && !s_drkonqiPath) {
         // search paths
         const QStringList paths = QStringList()
-#if QT_VERSION < QT_VERSION_CHECK(5, 15, 0)
-            << QFile::decodeName(qgetenv("LIBEXEC_PATH")).split(QLatin1Char(':'), QString::SkipEmptyParts) // env var is used first
-#else
             << QFile::decodeName(qgetenv("LIBEXEC_PATH")).split(QLatin1Char(':'), Qt::SkipEmptyParts) // env var is used first
-#endif
             << QCoreApplication::applicationDirPath() // then look where our application binary is located
             << QLibraryInfo::location(QLibraryInfo::LibraryExecutablesPath) // look where libexec path is (can be set in qt.conf)
             << QFile::decodeName(CMAKE_INSTALL_FULL_LIBEXECDIR); // look at our installation location
