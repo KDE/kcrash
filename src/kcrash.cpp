@@ -137,6 +137,7 @@ static Args s_autoRestartCommandLine;
 static std::unique_ptr<char[]> s_drkonqiPath;
 static KCrash::CrashFlags s_flags = KCrash::CrashFlags();
 static int s_launchDrKonqi = -1; // -1=initial value 0=disabled 1=enabled
+static int s_originalSignal = -1;
 
 static std::unique_ptr<char[]> s_kcrashErrorMessage;
 Q_GLOBAL_STATIC(KCrash::CoreConfig, s_coreConfig)
@@ -405,6 +406,12 @@ closeAllFDs()
 }
 #endif
 
+void crashOnSigTerm(int sig)
+{
+    Q_UNUSED(sig)
+    raise(s_originalSignal);
+}
+
 void
 KCrash::defaultCrashHandler(int sig)
 {
@@ -412,6 +419,7 @@ KCrash::defaultCrashHandler(int sig)
     // Handle possible recursions
     static int crashRecursionCounter = 0;
     crashRecursionCounter++; // Nothing before this, please !
+    s_originalSignal = sig;
 
 #if !defined(Q_OS_WIN)
     signal(SIGALRM, SIG_DFL);
@@ -468,6 +476,9 @@ KCrash::defaultCrashHandler(int sig)
 #endif
             return;
         }
+
+        // If someone is telling me to stop while I'm aleady crashing, then I should resume crashing
+        signal(SIGTERM, &crashOnSigTerm);
 
         const char *argv[29];  // don't forget to update this
         int i = 0;
