@@ -197,8 +197,8 @@ void KCrash::initialize()
         return;
     }
     const QStringList args = QCoreApplication::arguments();
-    if (!qEnvironmentVariableIsSet("KDE_DEBUG")
-        && !qEnvironmentVariableIsSet("KCRASH_AUTO_RESTARTED")
+    if (!qEnvironmentVariableIsSet("KDE_DEBUG") //
+        && !qEnvironmentVariableIsSet("KCRASH_AUTO_RESTARTED") //
         && !qEnvironmentVariableIntValue("RUNNING_UNDER_RR")) {
         // enable drkonqi
         KCrash::setDrKonqiEnabled(true);
@@ -215,9 +215,9 @@ void KCrash::initialize()
 
 #ifdef Q_OS_LINUX
     // Create socket path to transfer ptrace scope and open connection
-    s_socketpath = QFile::encodeName(
-            QStringLiteral("%1/kcrash_%2").arg(QStandardPaths::writableLocation(QStandardPaths::RuntimeLocation))
-                                          .arg(getpid()));
+    s_socketpath = QFile::encodeName(QStringLiteral("%1/kcrash_%2") //
+                                         .arg(QStandardPaths::writableLocation(QStandardPaths::RuntimeLocation))
+                                         .arg(getpid()));
 #endif
 
     s_coreConfig(); // Initialize.
