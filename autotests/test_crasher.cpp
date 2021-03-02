@@ -6,12 +6,12 @@
 */
 
 #include <QApplication>
-#include <QFile>
 #include <QDebug>
+#include <QFile>
 #include <kcrash.h>
 #ifdef Q_OS_UNIX
-#include <sys/resource.h> // setrlimit
 #include <errno.h>
+#include <sys/resource.h> // setrlimit
 #endif
 
 QFile output;
@@ -56,7 +56,7 @@ int main(int argc, char **argv)
         output.write("\n");
         output.flush();
         // CRASH!
-        delete (char*)0xdead;
+        delete (char *)0xdead;
     } else {
         output.write("autorestarted ");
         output.write(flag);
@@ -66,4 +66,3 @@ int main(int argc, char **argv)
 
     return 0;
 }
-

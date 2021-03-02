@@ -10,8 +10,8 @@
 
 #include <config-kcrash.h>
 
-namespace KCrash {
-
+namespace KCrash
+{
 CoreConfig::CoreConfig(const QString &path)
     : m_supported(false)
     , m_process(false)
@@ -19,16 +19,16 @@ CoreConfig::CoreConfig(const QString &path)
 #ifndef KCRASH_CORE_PATTERN_RAISE
     return; // Leave everything false unless enabled.
 #endif
-     QFile file(path);
-     if (!file.open(QIODevice::ReadOnly | QIODevice::Text)) {
-         return;
-     }
-     char first = 0;
-     if (!file.getChar(&first)) {
-         return;
-     }
-     m_supported = true;
-     m_process = first == '|';
+    QFile file(path);
+    if (!file.open(QIODevice::ReadOnly | QIODevice::Text)) {
+        return;
+    }
+    char first = 0;
+    if (!file.getChar(&first)) {
+        return;
+    }
+    m_supported = true;
+    m_process = first == '|';
 }
 
 bool CoreConfig::isProcess() const

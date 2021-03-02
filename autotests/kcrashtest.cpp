@@ -5,16 +5,17 @@
     SPDX-License-Identifier: LGPL-2.0-or-later
 */
 
-#include <QProcess>
-#include <QFile>
-#include <QTest>
 #include <QDebug>
+#include <QFile>
+#include <QProcess>
+#include <QTest>
 
 class KCrashTest : public QObject
 {
     Q_OBJECT
 private Q_SLOTS:
-    void initTestCase() {
+    void initTestCase()
+    {
         // Don't bring up drkonqi
         qputenv("KDE_DEBUG", "1");
         // change to the bin dir
@@ -23,7 +24,6 @@ private Q_SLOTS:
     void testAutoRestart();
     void testAutoRestartDirectly();
     void testEmergencySave();
-
 };
 
 static const char s_logFileName[] = "kcrashtest_log";
@@ -50,7 +50,7 @@ static void startCrasher(const QByteArray &flag, const QByteArray &expectedOutpu
     QVERIFY(QFile::exists("./test_crasher"));
     processName = QStringLiteral("./test_crasher");
 #endif
-    //qDebug() << proc.args();
+    // qDebug() << proc.args();
     QProcessEnvironment env = QProcessEnvironment::systemEnvironment();
     env.insert(QStringLiteral("ASAN_OPTIONS"), QStringLiteral("handle_segv=0,poison_heap=0")); // Disable ASAN
     proc.setProcessEnvironment(env);

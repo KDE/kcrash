@@ -3,7 +3,7 @@
     SPDX-FileCopyrightText: 2000 Timo Hummel <timo.hummel@sap.com>
     SPDX-FileCopyrightText: 2000 Tom Braun <braunt@fh-konstanz.de>
     SPDX-FileCopyrightText: 2010 George Kiagiadakis <kiagiadakis.george@gmail.com>
-    SPDX-FileCopyrightText: 2009 KDE e.V. <kde-ev-board@kde.org> 
+    SPDX-FileCopyrightText: 2009 KDE e.V. <kde-ev-board@kde.org>
     SPDX-FileContributor: 2009 Adriaan de Groot <groot@kde.org>
 
     SPDX-License-Identifier: LGPL-2.0-or-later
@@ -13,16 +13,16 @@
 
 #include <config-kcrash.h>
 
-#include <string.h>
 #include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include <qplatformdefs.h>
 #ifndef Q_OS_WIN
+#include <errno.h>
 #include <sys/resource.h>
 #include <sys/un.h>
-#include <errno.h>
 #else
 #include <qt_windows.h>
 #endif
@@ -34,16 +34,16 @@
 #include <KAboutData>
 #include <kstartupinfo.h>
 
-#include <array>
 #include <algorithm>
+#include <array>
 #include <memory>
 
 #include <QDebug>
+#include <QFile>
 #include <QGuiApplication>
+#include <QLibraryInfo>
 #include <QStandardPaths>
 #include <QThread>
-#include <QLibraryInfo>
-#include <QFile>
 
 #include <QLoggingCategory>
 Q_DECLARE_LOGGING_CATEGORY(LOG_KCRASH)
@@ -52,8 +52,8 @@ Q_DECLARE_LOGGING_CATEGORY(LOG_KCRASH)
 Q_LOGGING_CATEGORY(LOG_KCRASH, "kf.crash", QtInfoMsg)
 
 #if HAVE_X11
-#include <qx11info_x11.h>
 #include <X11/Xlib.h>
+#include <qx11info_x11.h>
 #endif
 
 #ifdef Q_OS_SOLARIS
@@ -72,7 +72,7 @@ Q_LOGGING_CATEGORY(LOG_KCRASH, "kf.crash", QtInfoMsg)
 typedef struct {
     long cmd;
     long arg_length;
-}   kcrash_launcher_header;
+} kcrash_launcher_header;
 
 #define LAUNCHER_OK 4
 #define LAUNCHER_EXEC_NEW 12
@@ -81,14 +81,13 @@ namespace KCrash
 {
 KCRASH_EXPORT bool loadedByKdeinit = false;
 void setApplicationFilePath(const QString &filePath);
-        // Create socket path to transfer ptrace scope and open connection
+// Create socket path to transfer ptrace scope and open connection
 }
 #ifdef Q_OS_LINUX
 static QByteArray s_socketpath;
 #endif
 
-struct Args
-{
+struct Args {
     ~Args()
     {
         clear();
@@ -144,7 +143,6 @@ Q_GLOBAL_STATIC(KCrash::CoreConfig, s_coreConfig)
 
 static void kcrashInitialize()
 {
-
     // Static because in some cases this is called multiple times
     // but if an application had any of the bad cases we always want
     // to skip the check
@@ -204,7 +202,7 @@ void KCrash::initialize()
         KCrash::setDrKonqiEnabled(true);
     } else {
         // This loads qtlogging.ini very early which prevents unittests from doing QStandardPaths::setTestModeEnabled(true) in initTestCase()
-        //qCDebug(LOG_KCRASH) << "KCrash disabled through environment.";
+        // qCDebug(LOG_KCRASH) << "KCrash disabled through environment.";
     }
 
     if (QCoreApplication::instance()) {
@@ -223,8 +221,7 @@ void KCrash::initialize()
     s_coreConfig(); // Initialize.
 }
 
-void
-KCrash::setEmergencySaveFunction(HandlerType saveFunction)
+void KCrash::setEmergencySaveFunction(HandlerType saveFunction)
 {
     s_emergencySaveFunction = saveFunction;
 
@@ -237,8 +234,7 @@ KCrash::setEmergencySaveFunction(HandlerType saveFunction)
     }
 }
 
-KCrash::HandlerType
-KCrash::emergencySaveFunction()
+KCrash::HandlerType KCrash::emergencySaveFunction()
 {
     return s_emergencySaveFunction;
 }
@@ -256,6 +252,7 @@ public:
     {
         startTimer(10000); // 10 s
     }
+
 protected:
     void timerEvent(QTimerEvent *event) override
     {
@@ -267,8 +264,7 @@ protected:
     }
 };
 
-void
-KCrash::setFlags(KCrash::CrashFlags flags)
+void KCrash::setFlags(KCrash::CrashFlags flags)
 {
     s_flags = flags;
     if (s_flags & AutoRestart) {
@@ -315,11 +311,11 @@ void KCrash::setDrKonqiEnabled(bool enabled)
     s_launchDrKonqi = launchDrKonqi;
     if (s_launchDrKonqi && !s_drkonqiPath) {
         // search paths
-        const QStringList paths = QStringList()
-            << QFile::decodeName(qgetenv("LIBEXEC_PATH")).split(QLatin1Char(':'), Qt::SkipEmptyParts) // env var is used first
-            << QCoreApplication::applicationDirPath() // then look where our application binary is located
-            << QLibraryInfo::location(QLibraryInfo::LibraryExecutablesPath) // look where libexec path is (can be set in qt.conf)
-            << QFile::decodeName(KDE_INSTALL_FULL_LIBEXECDIR); // look at our installation location
+        const QStringList paths =
+            QStringList() << QFile::decodeName(qgetenv("LIBEXEC_PATH")).split(QLatin1Char(':'), Qt::SkipEmptyParts) // env var is used first
+                          << QCoreApplication::applicationDirPath() // then look where our application binary is located
+                          << QLibraryInfo::location(QLibraryInfo::LibraryExecutablesPath) // look where libexec path is (can be set in qt.conf)
+                          << QFile::decodeName(KDE_INSTALL_FULL_LIBEXECDIR); // look at our installation location
         const QString exec = QStandardPaths::findExecutable(QStringLiteral("drkonqi"), paths);
         if (exec.isEmpty()) {
             qCDebug(LOG_KCRASH) << "Could not find drkonqi in search paths:" << paths;
@@ -329,7 +325,7 @@ void KCrash::setDrKonqiEnabled(bool enabled)
         }
     }
 
-    //we need at least the default crash handler to launch drkonqi
+    // we need at least the default crash handler to launch drkonqi
     if (s_launchDrKonqi && !s_crashHandler) {
         setCrashHandler(defaultCrashHandler);
     }
@@ -340,8 +336,7 @@ bool KCrash::isDrKonqiEnabled()
     return s_launchDrKonqi == 1;
 }
 
-void
-KCrash::setCrashHandler(HandlerType handler)
+void KCrash::setCrashHandler(HandlerType handler)
 {
 #if defined(Q_OS_WIN)
     static LPTOP_LEVEL_EXCEPTION_FILTER s_previousExceptionFilter = NULL;
@@ -387,15 +382,13 @@ KCrash::setCrashHandler(HandlerType handler)
     s_crashHandler = handler;
 }
 
-KCrash::HandlerType
-KCrash::crashHandler()
+KCrash::HandlerType KCrash::crashHandler()
 {
     return s_crashHandler;
 }
 
 #if !defined(Q_OS_WIN) && !defined(Q_OS_OSX)
-static void
-closeAllFDs()
+static void closeAllFDs()
 {
     // Close all remaining file descriptors except for stdin/stdout/stderr
     struct rlimit rlp;
@@ -412,8 +405,7 @@ void crashOnSigTerm(int sig)
     raise(s_originalSignal);
 }
 
-void
-KCrash::defaultCrashHandler(int sig)
+void KCrash::defaultCrashHandler(int sig)
 {
     // WABA: Do NOT use qDebug() in this function because it is much too risky!
     // Handle possible recursions
@@ -427,7 +419,7 @@ KCrash::defaultCrashHandler(int sig)
 #endif
 
 #ifdef Q_OS_SOLARIS
-    (void) printstack(2 /* stderr, assuming it's still open. */);
+    (void)printstack(2 /* stderr, assuming it's still open. */);
 #endif
 
     if (crashRecursionCounter < 2) {
@@ -445,28 +437,28 @@ KCrash::defaultCrashHandler(int sig)
     if (!(s_flags & KeepFDs)) {
         closeAllFDs();
     }
-# if HAVE_X11
+#if HAVE_X11
     else if (QX11Info::display()) {
         close(ConnectionNumber(QX11Info::display()));
     }
-# endif
+#endif
 #endif
 
     if (crashRecursionCounter < 3) {
 #ifndef NDEBUG
-        fprintf(stderr, "KCrash: crashing... crashRecursionCounter = %d\n",
-                crashRecursionCounter);
-        fprintf(stderr, "KCrash: Application Name = %s path = %s pid = %lld\n",
+        fprintf(stderr, "KCrash: crashing... crashRecursionCounter = %d\n", crashRecursionCounter);
+        fprintf(stderr,
+                "KCrash: Application Name = %s path = %s pid = %lld\n",
                 s_appName ? s_appName.get() : "<unknown>",
-                s_appPath ? s_appPath.get() : "<unknown>", QCoreApplication::applicationPid());
+                s_appPath ? s_appPath.get() : "<unknown>",
+                QCoreApplication::applicationPid());
         fprintf(stderr, "KCrash: Arguments: ");
         for (int i = 0; i < s_autoRestartCommandLine.argc; ++i) {
             fprintf(stderr, "%s ", s_autoRestartCommandLine.argv[i]);
         }
         fprintf(stderr, "\n");
 #else
-        fprintf(stderr, "KCrash: Application '%s' crashing...\n",
-                s_appName ? s_appName.get() : "<unknown>");
+        fprintf(stderr, "KCrash: Application '%s' crashing...\n", s_appName ? s_appName.get() : "<unknown>");
 #endif
 
         if (s_launchDrKonqi != 1) {
@@ -480,7 +472,7 @@ KCrash::defaultCrashHandler(int sig)
         // If someone is telling me to stop while I'm aleady crashing, then I should resume crashing
         signal(SIGTERM, &crashOnSigTerm);
 
-        const char *argv[29];  // don't forget to update this
+        const char *argv[29]; // don't forget to update this
         int i = 0;
 
         // argument 0 has to be drkonqi
@@ -518,12 +510,12 @@ KCrash::defaultCrashHandler(int sig)
         }
 
         // signal number -- will never be NULL
-        char sigtxt[ 10 ];
+        char sigtxt[10];
         sprintf(sigtxt, "%d", sig);
         argv[i++] = "--signal";
         argv[i++] = sigtxt;
 
-        char pidtxt[ 20 ];
+        char pidtxt[20];
         sprintf(pidtxt, "%lld", QCoreApplication::applicationPid());
         argv[i++] = "--pid";
         argv[i++] = pidtxt;
@@ -558,11 +550,11 @@ KCrash::defaultCrashHandler(int sig)
         }
 
         if ((s_flags & AutoRestart) && s_autoRestartCommandLine) {
-            argv[i++] = "--restarted";    //tell drkonqi if the app has been restarted
+            argv[i++] = "--restarted"; // tell drkonqi if the app has been restarted
         }
 
 #if defined(Q_OS_WIN)
-        char threadId[8] = { 0 };
+        char threadId[8] = {0};
         sprintf(threadId, "%d", GetCurrentThreadId());
         argv[i++] = "--thread";
         argv[i++] = threadId;
@@ -600,15 +592,10 @@ void KCrash::startProcess(int argc, const char *argv[], bool waitAndExit)
     }
 
     PROCESS_INFORMATION procInfo;
-    STARTUPINFOW startupInfo = { sizeof(STARTUPINFO), 0, 0, 0,
-                                 (ulong)CW_USEDEFAULT, (ulong)CW_USEDEFAULT,
-                                 (ulong)CW_USEDEFAULT, (ulong)CW_USEDEFAULT,
-                                 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
-                               };
+    STARTUPINFOW startupInfo =
+        {sizeof(STARTUPINFO), 0, 0, 0, (ulong)CW_USEDEFAULT, (ulong)CW_USEDEFAULT, (ulong)CW_USEDEFAULT, (ulong)CW_USEDEFAULT, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
 
-    bool success = CreateProcess(0, (wchar_t *) cmdLine.utf16(), NULL, NULL,
-                                 false, CREATE_UNICODE_ENVIRONMENT, NULL, NULL,
-                                 &startupInfo, &procInfo);
+    bool success = CreateProcess(0, (wchar_t *)cmdLine.utf16(), NULL, NULL, false, CREATE_UNICODE_ENVIRONMENT, NULL, NULL, &startupInfo, &procInfo);
 
     if (success && waitAndExit) {
         // wait for child to exit
@@ -617,7 +604,7 @@ void KCrash::startProcess(int argc, const char *argv[], bool waitAndExit)
     }
 }
 
-//glue function for calling the unix signal handler from the windows unhandled exception filter
+// glue function for calling the unix signal handler from the windows unhandled exception filter
 LONG WINAPI KCrash::win32UnhandledExceptionFilter(_EXCEPTION_POINTERS *exceptionInfo)
 {
     // kdbgwin needs the context inside exceptionInfo because if getting the context after the
@@ -625,29 +612,18 @@ LONG WINAPI KCrash::win32UnhandledExceptionFilter(_EXCEPTION_POINTERS *exception
     // ntdll.dll, which is supposed to dispatch the exception from kernel mode back to user mode
     // so... let's create some shared memory
     HANDLE hMapFile = NULL;
-    hMapFile = CreateFileMapping(
-                   INVALID_HANDLE_VALUE,
-                   NULL,
-                   PAGE_READWRITE,
-                   0,
-                   sizeof(CONTEXT),
-                   TEXT("Local\\KCrashShared"));
+    hMapFile = CreateFileMapping(INVALID_HANDLE_VALUE, NULL, PAGE_READWRITE, 0, sizeof(CONTEXT), TEXT("Local\\KCrashShared"));
 
     LPCTSTR pBuf = NULL;
-    pBuf = (LPCTSTR) MapViewOfFile(
-               hMapFile,
-               FILE_MAP_ALL_ACCESS,
-               0,
-               0,
-               sizeof(CONTEXT));
-    CopyMemory((PVOID) pBuf, exceptionInfo->ContextRecord, sizeof(CONTEXT));
+    pBuf = (LPCTSTR)MapViewOfFile(hMapFile, FILE_MAP_ALL_ACCESS, 0, 0, sizeof(CONTEXT));
+    CopyMemory((PVOID)pBuf, exceptionInfo->ContextRecord, sizeof(CONTEXT));
 
     if (s_crashHandler) {
         s_crashHandler(exceptionInfo->ExceptionRecord->ExceptionCode);
     }
 
     CloseHandle(hMapFile);
-    return EXCEPTION_EXECUTE_HANDLER; //allow windows to do the default action (terminate)
+    return EXCEPTION_EXECUTE_HANDLER; // allow windows to do the default action (terminate)
 }
 #else
 
@@ -681,7 +657,7 @@ void KCrash::startProcess(int argc, const char *argv[], bool waitAndExit)
         // a debugger it is not an ancestor of (because it was started via kdeinit or
         // KProcess::startDetached()) using a socket.
 #ifndef PR_SET_PTRACER
-# define PR_SET_PTRACER 0x59616d61
+#define PR_SET_PTRACER 0x59616d61
 #endif
         prctl(PR_SET_PTRACER, pid, 0, 0, 0);
 
@@ -690,14 +666,14 @@ void KCrash::startProcess(int argc, const char *argv[], bool waitAndExit)
         if (sockfd >= 0) {
             // Wait while DrKonqi is running and the socket connection exists
             // If the process was started directly, use waitpid(), as it's a child...
-            while ((running = waitpid(pid, nullptr, WNOHANG) != pid) && pollDrKonqiSocket(pid, sockfd) >= 0) {}
+            while ((running = waitpid(pid, nullptr, WNOHANG) != pid) && pollDrKonqiSocket(pid, sockfd) >= 0) { }
             close(sockfd);
             unlink(s_socketpath.constData());
         }
 #endif
         if (running) {
             // If the process was started directly, use waitpid(), as it's a child...
-            while (waitpid(pid, nullptr, 0) != pid) {}
+            while (waitpid(pid, nullptr, 0) != pid) { }
         }
         if (!s_coreConfig->isProcess()) {
             // Only exit if we don't forward to core dumps
@@ -709,19 +685,18 @@ void KCrash::startProcess(int argc, const char *argv[], bool waitAndExit)
 extern "C" char **environ;
 static pid_t startDirectly(const char *argv[])
 {
-    char** environ_end;
-    for(environ_end = environ; *environ_end; ++environ_end) {}
+    char **environ_end;
+    for (environ_end = environ; *environ_end; ++environ_end) { }
 
-    std::array<const char*, 1024> environ_data; //hope it's big enough
-    if((unsigned)(environ_end - environ) +2 >= environ_data.size()) {
+    std::array<const char *, 1024> environ_data; // hope it's big enough
+    if ((unsigned)(environ_end - environ) + 2 >= environ_data.size()) {
         fprintf(stderr, "environ_data in KCrash not big enough!\n");
         return 0;
     }
-    auto end = std::copy_if(environ, environ_end, environ_data.begin(),
-                            [](const char* s) {
-                              static const char envvar[] = "KCRASH_AUTO_RESTARTED=";
-                              return strncmp(envvar, s, sizeof(envvar)-1) != 0;
-                            });
+    auto end = std::copy_if(environ, environ_end, environ_data.begin(), [](const char *s) {
+        static const char envvar[] = "KCRASH_AUTO_RESTARTED=";
+        return strncmp(envvar, s, sizeof(envvar) - 1) != 0;
+    });
     *end++ = "KCRASH_AUTO_RESTARTED=1";
     *end++ = nullptr;
     pid_t pid = fork();
@@ -732,12 +707,12 @@ static pid_t startDirectly(const char *argv[])
     case 0:
         setgroups(0, nullptr); // Remove any extraneous groups
         if (setgid(getgid()) < 0 || setuid(getuid()) < 0) {
-            _exit(253);    // This cannot happen. Theoretically.
+            _exit(253); // This cannot happen. Theoretically.
         }
 #ifndef Q_OS_OSX
         closeAllFDs(); // We are in the child now. Close FDs unconditionally.
 #endif
-        execve(argv[0], const_cast< char ** >(argv), const_cast<char**> (environ_data.data()));
+        execve(argv[0], const_cast<char **>(argv), const_cast<char **>(environ_data.data()));
         fprintf(stderr, "KCrash failed to exec(), errno = %d\n", errno);
         _exit(253);
     default:

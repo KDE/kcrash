@@ -34,7 +34,6 @@ class QString;
  */
 namespace KCrash
 {
-
 /**
  * Initialize KCrash.
  *
@@ -106,10 +105,11 @@ KCRASH_EXPORT HandlerType emergencySaveFunction();
  * @see CrashFlags
  */
 enum CrashFlag {
-    KeepFDs = 1,          ///< don't close all file descriptors immediately
-    SaferDialog = 2,      ///< start DrKonqi without arbitrary disk access
-    AlwaysDirectly = 4,   ///< never try to to start DrKonqi via kdeinit. Use fork() and exec() instead. @deprecated This is now the default, and does not need to be set.
-    AutoRestart = 8,      ///< autorestart this application. Only sensible for KUniqueApplications. @since 4.1.
+    KeepFDs = 1, ///< don't close all file descriptors immediately
+    SaferDialog = 2, ///< start DrKonqi without arbitrary disk access
+    AlwaysDirectly =
+        4, ///< never try to to start DrKonqi via kdeinit. Use fork() and exec() instead. @deprecated This is now the default, and does not need to be set.
+    AutoRestart = 8, ///< autorestart this application. Only sensible for KUniqueApplications. @since 4.1.
 };
 /**
  * Stores a combination of #CrashFlag values.
@@ -157,4 +157,3 @@ KCRASH_EXPORT void setErrorMessage(const QString &message);
 }
 
 #endif
-

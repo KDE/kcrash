@@ -9,8 +9,8 @@
 
 #include <QString>
 
-namespace KCrash {
-
+namespace KCrash
+{
 class CoreConfig
 {
 public:
