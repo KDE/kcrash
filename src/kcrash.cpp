@@ -60,7 +60,7 @@ Q_LOGGING_CATEGORY(LOG_KCRASH, "kf.crash", QtInfoMsg)
 // Solaris has built-in, thread-safe, async-signal-safe, mechanisms
 // to walk the stack in the case of a crash, as well as (optionally)
 // to demangle C++ symbol names. In the case of a crash, dump a stack
-// trace to stderr before starting drKonqui (because what drKonqui is
+// trace to stderr before starting DrKonqi (because what DrKonqi is
 // going to do is -- through a complicated process -- print the
 // exact same information, but less reliably).
 #include <ucontext.h>
@@ -469,7 +469,7 @@ void KCrash::defaultCrashHandler(int sig)
             return;
         }
 
-        // If someone is telling me to stop while I'm aleady crashing, then I should resume crashing
+        // If someone is telling me to stop while I'm already crashing, then I should resume crashing
         signal(SIGTERM, &crashOnSigTerm);
 
         const char *argv[29]; // don't forget to update this
