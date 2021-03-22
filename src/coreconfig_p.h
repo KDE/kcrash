@@ -19,8 +19,8 @@ public:
     bool isProcess() const;
 
 private:
-    bool m_supported;
-    bool m_process;
+    bool m_supported = false;
+    bool m_process = false;
 };
 
 } // namespace KCrash

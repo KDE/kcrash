@@ -13,8 +13,6 @@
 namespace KCrash
 {
 CoreConfig::CoreConfig(const QString &path)
-    : m_supported(false)
-    , m_process(false)
 {
 #ifndef KCRASH_CORE_PATTERN_RAISE
     return; // Leave everything false unless enabled.
