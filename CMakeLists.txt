@@ -50,7 +50,7 @@ option(KCRASH_CORE_PATTERN_RAISE
     ${KCRASH_CORE_PATTERN_RAISE_DEFAULT})
 add_feature_info("Core Pattern Raising"
     KCRASH_CORE_PATTERN_RAISE
-    "Raising signals to kernel core patterns (iff the pattern is a process). You may wish to not install drkonqi if this can cause a UI conflict. ${FEATURE_ADDENDUM}")
+    "Raising signals to kernel core patterns (iff the pattern is a process). You may wish to not install drkonqi if this can cause a UI conflict.")
 
 if (EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/po)
   include(ECMPoQmTools)
