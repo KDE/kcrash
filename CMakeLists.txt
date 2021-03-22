@@ -46,7 +46,7 @@ find_package(KF5WindowSystem ${KF_DEP_VERSION} REQUIRED)
 set(KCRASH_CORE_PATTERN_RAISE_DEFAULT ON)
 
 option(KCRASH_CORE_PATTERN_RAISE
-    "Enables raising signals to kernel core patterns (iff the pattern is a process). You may wish to not intall drkonqi if this can cause a UI conflict."
+    "Enables raising signals to kernel core patterns (iff the pattern is a process). You may wish to not install drkonqi if this can cause a UI conflict."
     ${KCRASH_CORE_PATTERN_RAISE_DEFAULT})
 add_feature_info("Core Pattern Raising"
     KCRASH_CORE_PATTERN_RAISE
