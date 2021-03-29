@@ -435,6 +435,11 @@ void KCrash::defaultCrashHandler(int sig)
 
 #if !defined(Q_OS_WIN) && !defined(Q_OS_OSX)
     if (!(s_flags & KeepFDs)) {
+        // This tries to prevent problems where applications fail to release resources that drkonqi might need.
+        // Specifically this was introduced to ensure that an application that had grabbed the X11 cursor would
+        // forcefully have it removed upon crash to ensure it is ungrabbed by the time drkonqi makes an appearance.
+        // This is also the point in time when, for example, dbus services are lost. Closing the socket indicates
+        // to dbus-daemon that the process has disappeared and it will forcefully reclaim the registered service names.
         closeAllFDs();
     }
 #if HAVE_X11
