@@ -10,7 +10,7 @@
 #include <QFile>
 #include <kcrash.h>
 #ifdef Q_OS_UNIX
-#include <errno.h>
+#include <cerrno>
 #include <sys/resource.h> // setrlimit
 #endif
 

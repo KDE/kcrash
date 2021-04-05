@@ -20,7 +20,7 @@
 
 #include <qplatformdefs.h>
 #ifndef Q_OS_WIN
-#include <errno.h>
+#include <cerrno>
 #include <sys/resource.h>
 #include <sys/un.h>
 #else
