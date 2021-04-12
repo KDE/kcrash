@@ -56,16 +56,6 @@ Q_LOGGING_CATEGORY(LOG_KCRASH, "kf.crash", QtInfoMsg)
 #include <qx11info_x11.h>
 #endif
 
-#ifdef Q_OS_SOLARIS
-// Solaris has built-in, thread-safe, async-signal-safe, mechanisms
-// to walk the stack in the case of a crash, as well as (optionally)
-// to demangle C++ symbol names. In the case of a crash, dump a stack
-// trace to stderr before starting DrKonqi (because what DrKonqi is
-// going to do is -- through a complicated process -- print the
-// exact same information, but less reliably).
-#include <ucontext.h>
-#endif
-
 #include "coreconfig_p.h"
 
 // Copy from klauncher_cmds
@@ -416,10 +406,6 @@ void KCrash::defaultCrashHandler(int sig)
 #if !defined(Q_OS_WIN)
     signal(SIGALRM, SIG_DFL);
     alarm(3); // Kill me... (in case we deadlock in malloc)
-#endif
-
-#ifdef Q_OS_SOLARIS
-    (void)printstack(2 /* stderr, assuming it's still open. */);
 #endif
 
     if (crashRecursionCounter < 2) {
