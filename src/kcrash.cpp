@@ -381,9 +381,9 @@ KCrash::HandlerType KCrash::crashHandler()
 static void closeAllFDs()
 {
     // Close all remaining file descriptors except for stdin/stdout/stderr
-    struct rlimit rlp;
+    struct rlimit rlp = {};
     getrlimit(RLIMIT_NOFILE, &rlp);
-    for (int i = 3; i < (int)rlp.rlim_cur; i++) {
+    for (rlim_t i = 3; i < rlp.rlim_cur; i++) {
         close(i);
     }
 }
