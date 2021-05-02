@@ -42,7 +42,7 @@ if(${X11_FOUND})
   target_include_directories(KF5Crash PRIVATE ${X11_X11_INCLUDE_PATH})
 endif()
 
-set_target_properties(KF5Crash PROPERTIES VERSION   ${KCrash_VERSION_STRING}
+set_target_properties(KF5Crash PROPERTIES VERSION   ${KCrash_VERSION}
                                           SOVERSION ${KCrash_SOVERSION}
                                           EXPORT_NAME Crash
 )
