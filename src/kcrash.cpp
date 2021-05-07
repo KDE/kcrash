@@ -463,7 +463,7 @@ void KCrash::defaultCrashHandler(int sig)
         // If someone is telling me to stop while I'm already crashing, then I should resume crashing
         signal(SIGTERM, &crashOnSigTerm);
 
-        const char *argv[29]; // don't forget to update this
+        const char *argv[31]; // don't forget to update this
         int i = 0;
 
         // argument 0 has to be drkonqi
@@ -526,6 +526,11 @@ void KCrash::defaultCrashHandler(int sig)
             if (about->internalBugAddress()) {
                 argv[i++] = "--bugaddress";
                 argv[i++] = about->internalBugAddress();
+            }
+
+            if (about->internalProductName()) {
+                argv[i++] = "--productname";
+                argv[i++] = about->internalProductName();
             }
         }
 
