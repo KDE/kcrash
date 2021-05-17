@@ -4,6 +4,7 @@
     SPDX-FileCopyrightText: 2000 Tom Braun <braunt@fh-konstanz.de>
     SPDX-FileCopyrightText: 2010 George Kiagiadakis <kiagiadakis.george@gmail.com>
     SPDX-FileCopyrightText: 2009 KDE e.V. <kde-ev-board@kde.org>
+    SPDX-FileCopyrightText: 2021 Harald Sitter <sitter@kde.org>
     SPDX-FileContributor: 2009 Adriaan de Groot <groot@kde.org>
 
     SPDX-License-Identifier: LGPL-2.0-or-later
@@ -39,6 +40,7 @@
 #include <memory>
 
 #include <QDebug>
+#include <QDir>
 #include <QFile>
 #include <QGuiApplication>
 #include <QLibraryInfo>
@@ -57,6 +59,7 @@ Q_LOGGING_CATEGORY(LOG_KCRASH, "kf.crash", QtInfoMsg)
 #endif
 
 #include "coreconfig_p.h"
+#include "metadata_p.h"
 
 // Copy from klauncher_cmds
 typedef struct {
@@ -120,13 +123,15 @@ struct Args {
 
 static KCrash::HandlerType s_emergencySaveFunction = nullptr;
 static KCrash::HandlerType s_crashHandler = nullptr;
-static std::unique_ptr<char[]> s_appName;
-static std::unique_ptr<char[]> s_appPath;
+static std::unique_ptr<char[]> s_appFilePath; // this is the actual QCoreApplication::applicationFilePath
+static std::unique_ptr<char[]> s_appName; // the binary name (may be altered by the application)
+static std::unique_ptr<char[]> s_appPath; // the binary dir path (may be altered by the application)
 static Args s_autoRestartCommandLine;
 static std::unique_ptr<char[]> s_drkonqiPath;
 static KCrash::CrashFlags s_flags = KCrash::CrashFlags();
 static int s_launchDrKonqi = -1; // -1=initial value 0=disabled 1=enabled
 static int s_originalSignal = -1;
+static QByteArray s_metadataPath;
 
 static std::unique_ptr<char[]> s_kcrashErrorMessage;
 Q_GLOBAL_STATIC(KCrash::CoreConfig, s_coreConfig)
@@ -169,6 +174,18 @@ static void kcrashInitialize()
 }
 Q_COREAPP_STARTUP_FUNCTION(kcrashInitialize)
 
+static QStringList libexecPaths()
+{
+    // Static since we only need to evaluate once.
+    static QStringList list = QFile::decodeName(qgetenv("LIBEXEC_PATH")).split(QLatin1Char(':'), Qt::SkipEmptyParts) // env var is used first
+        + QStringList{
+            QCoreApplication::applicationDirPath(), // then look where our application binary is located
+            QLibraryInfo::location(QLibraryInfo::LibraryExecutablesPath), // look where libexec path is (can be set in qt.conf)
+            QFile::decodeName(KDE_INSTALL_FULL_LIBEXECDIR) // look at our installation location
+        };
+    return list;
+}
+
 namespace KCrash
 {
 void setApplicationFilePath(const QString &filePath);
@@ -176,6 +193,19 @@ void startProcess(int argc, const char *argv[], bool waitAndExit);
 
 #if defined(Q_OS_WIN)
 LONG WINAPI win32UnhandledExceptionFilter(_EXCEPTION_POINTERS *exceptionInfo);
+#endif
+}
+
+static bool shouldWriteMetadataToDisk()
+{
+#ifdef Q_OS_LINUX
+    // NB: The daemon being currently running must not be a condition here. If something crashes during logout
+    // the daemon may already be gone but we'll still want to deal with the crash on next login!
+    // Similar reasoning applies to not checking the presence of the launcher socket.
+    const bool drkonqiCoredumpHelper = !QStandardPaths::findExecutable(QStringLiteral("drkonqi-coredump-processor"), libexecPaths()).isEmpty();
+    return s_coreConfig()->isCoredumpd() && drkonqiCoredumpHelper && !qEnvironmentVariableIsSet("KCRASH_NO_METADATA");
+#else
+    return false;
 #endif
 }
 
@@ -187,7 +217,8 @@ void KCrash::initialize()
     const QStringList args = QCoreApplication::arguments();
     if (!qEnvironmentVariableIsSet("KDE_DEBUG") //
         && !qEnvironmentVariableIsSet("KCRASH_AUTO_RESTARTED") //
-        && !qEnvironmentVariableIntValue("RUNNING_UNDER_RR")) {
+        && !qEnvironmentVariableIntValue("RUNNING_UNDER_RR") //
+        && qEnvironmentVariableIntValue("KCRASH_DUMP_ONLY") == 0) {
         // enable drkonqi
         KCrash::setDrKonqiEnabled(true);
     } else {
@@ -196,17 +227,36 @@ void KCrash::initialize()
     }
 
     if (QCoreApplication::instance()) {
-        KCrash::setApplicationFilePath(QCoreApplication::applicationFilePath());
+        const QString path = QCoreApplication::applicationFilePath();
+        s_appFilePath.reset(qstrdup(qPrintable(path))); // This intentionally cannot be changed by the application!
+        KCrash::setApplicationFilePath(path);
     } else {
         qWarning() << "This process needs a QCoreApplication instance in order to use KCrash";
     }
 
 #ifdef Q_OS_LINUX
     // Create socket path to transfer ptrace scope and open connection
-    s_socketpath = QFile::encodeName(QStringLiteral("%1/kcrash_%2") //
-                                         .arg(QStandardPaths::writableLocation(QStandardPaths::RuntimeLocation))
-                                         .arg(getpid()));
+    s_socketpath = QFile::encodeName(QStringLiteral("%1/kcrash_%2").arg(QStandardPaths::writableLocation(QStandardPaths::RuntimeLocation)).arg(getpid()));
 #endif
+
+    if (shouldWriteMetadataToDisk()) {
+        // We do not actively clean up metadata via KCrash but some other service. This potentially means we litter
+        // a lot -> put the metadata in a subdir.
+        const QString metadataDir = QStandardPaths::writableLocation(QStandardPaths::GenericCacheLocation) + QStringLiteral("/kcrash-metadata");
+        if (QDir().mkpath(metadataDir)) {
+            s_metadataPath = QFile::encodeName(metadataDir + QStringLiteral("/%1.ini").arg(QCoreApplication::applicationPid()));
+        }
+        if (!s_crashHandler) {
+            // Always enable the default handler. We cannot create the metadata ahead of time since we do not know
+            // when the application metadata is "complete".
+            // TODO: kf6 maybe change the way init works and have the users run it when their done with kaboutdata etc.?
+            //    the problem with delayed writing is that our crash handler (or any crash handler really) introduces a delay
+            //    in dumping and this in turn increases the risk of another stepping into a puddle (SEGV only runs on the
+            //    faulting thread; all other threads continue running!). therefore it'd be greatly preferred if we
+            //    were able to write the metadata during initial app setup instead of when a crash occurs
+            setCrashHandler(defaultCrashHandler);
+        }
+    } // empty s_metadataPath disables writing
 
     s_coreConfig(); // Initialize.
 }
@@ -300,15 +350,9 @@ void KCrash::setDrKonqiEnabled(bool enabled)
     }
     s_launchDrKonqi = launchDrKonqi;
     if (s_launchDrKonqi && !s_drkonqiPath) {
-        // search paths
-        const QStringList paths =
-            QStringList() << QFile::decodeName(qgetenv("LIBEXEC_PATH")).split(QLatin1Char(':'), Qt::SkipEmptyParts) // env var is used first
-                          << QCoreApplication::applicationDirPath() // then look where our application binary is located
-                          << QLibraryInfo::location(QLibraryInfo::LibraryExecutablesPath) // look where libexec path is (can be set in qt.conf)
-                          << QFile::decodeName(KDE_INSTALL_FULL_LIBEXECDIR); // look at our installation location
-        const QString exec = QStandardPaths::findExecutable(QStringLiteral("drkonqi"), paths);
+        const QString exec = QStandardPaths::findExecutable(QStringLiteral("drkonqi"), libexecPaths());
         if (exec.isEmpty()) {
-            qCDebug(LOG_KCRASH) << "Could not find drkonqi in search paths:" << paths;
+            qCDebug(LOG_KCRASH) << "Could not find drkonqi in search paths:" << libexecPaths();
             s_launchDrKonqi = 0;
         } else {
             s_drkonqiPath.reset(qstrdup(qPrintable(exec)));
@@ -419,23 +463,104 @@ void KCrash::defaultCrashHandler(int sig)
         crashRecursionCounter++;
     }
 
-#if !defined(Q_OS_WIN) && !defined(Q_OS_OSX)
-    if (!(s_flags & KeepFDs)) {
-        // This tries to prevent problems where applications fail to release resources that drkonqi might need.
-        // Specifically this was introduced to ensure that an application that had grabbed the X11 cursor would
-        // forcefully have it removed upon crash to ensure it is ungrabbed by the time drkonqi makes an appearance.
-        // This is also the point in time when, for example, dbus services are lost. Closing the socket indicates
-        // to dbus-daemon that the process has disappeared and it will forcefully reclaim the registered service names.
-        closeAllFDs();
-    }
-#if HAVE_X11
-    else if (QX11Info::display()) {
-        close(ConnectionNumber(QX11Info::display()));
-    }
+    if (crashRecursionCounter < 3) {
+        // If someone is telling me to stop while I'm already crashing, then I should resume crashing
+        signal(SIGTERM, &crashOnSigTerm);
+
+        // NB: metadata writing ought to happen before closing FDs to reduce synchronization problems with dbus.
+        MetadataWriter *writer = nullptr;
+#ifdef Q_OS_LINUX
+        if (!s_metadataPath.isEmpty()) {
+            MetadataINIWriter ini(s_metadataPath);
+            // Add the canonical exe path so the coredump daemon has more data points to map metdata to journald entry.
+            ini.add("--exe", s_appFilePath.get(), MetadataWriter::BoolValue::No);
+            writer = &ini;
+        }
 #endif
+        // WARNING: do not forget to increase Metadata::argv's size when adding more potential arguments!
+        Metadata data(s_drkonqiPath.get(), writer);
+
+        const QByteArray platformName = QGuiApplication::platformName().toUtf8();
+        if (!platformName.isEmpty()) {
+            data.add("--platform", platformName.constData());
+        }
+
+#if HAVE_X11
+        if (platformName == QByteArrayLiteral("xcb")) {
+            // start up on the correct display
+            char *display = nullptr;
+            if (QX11Info::display()) {
+                display = XDisplayString(QX11Info::display());
+            } else {
+                display = getenv("DISPLAY");
+            }
+            data.add("--display", display);
+        }
 #endif
 
-    if (crashRecursionCounter < 3) {
+        data.add("--appname", s_appName ? s_appName.get() : "<unknown>");
+
+        if (loadedByKdeinit) {
+            data.addBool("--kdeinit");
+        }
+
+        // only add apppath if it's not NULL
+        if (s_appPath && s_appPath[0]) {
+            data.add("--apppath", s_appPath.get());
+        }
+
+        // signal number -- will never be NULL
+        char sigtxt[10];
+        sprintf(sigtxt, "%d", sig);
+        data.add("--signal", sigtxt);
+
+        char pidtxt[20];
+        sprintf(pidtxt, "%lld", QCoreApplication::applicationPid());
+        data.add("--pid", pidtxt);
+
+        const KAboutData *about = KAboutData::applicationDataPointer();
+        if (about) {
+            if (about->internalVersion()) {
+                data.add("--appversion", about->internalVersion());
+            }
+
+            if (about->internalProgramName()) {
+                data.add("--programname", about->internalProgramName());
+            }
+
+            if (about->internalBugAddress()) {
+                data.add("--bugaddress", about->internalBugAddress());
+            }
+
+            if (about->internalProductName()) {
+                data.add("--productname", about->internalProductName());
+            }
+        }
+
+        // make sure the constData() pointer remains valid when we call startProcess by making a copy
+        QByteArray startupId = KStartupInfo::startupId();
+        if (!startupId.isNull()) {
+            data.add("--startupid", startupId.constData());
+        }
+
+        if (s_flags & SaferDialog) {
+            data.addBool("--safer");
+        }
+
+        if ((s_flags & AutoRestart) && s_autoRestartCommandLine) {
+            data.addBool("--restarted");
+        }
+
+#if defined(Q_OS_WIN)
+        char threadId[8] = {0};
+        sprintf(threadId, "%d", GetCurrentThreadId());
+        data.add("--thread", threadId);
+#endif
+
+        data.close();
+        const int argc = data.argc;
+        const char **argv = data.argv.data();
+
 #ifndef NDEBUG
         fprintf(stderr, "KCrash: crashing... crashRecursionCounter = %d\n", crashRecursionCounter);
         fprintf(stderr,
@@ -452,6 +577,26 @@ void KCrash::defaultCrashHandler(int sig)
         fprintf(stderr, "KCrash: Application '%s' crashing...\n", s_appName ? s_appName.get() : "<unknown>");
 #endif
 
+#if !defined(Q_OS_WIN) && !defined(Q_OS_OSX)
+        if (!(s_flags & KeepFDs)) {
+            // This tries to prevent problems where applications fail to release resources that drkonqi might need.
+            // Specifically this was introduced to ensure that an application that had grabbed the X11 cursor would
+            // forcefully have it removed upon crash to ensure it is ungrabbed by the time drkonqi makes an appearance.
+            // This is also the point in time when, for example, dbus services are lost. Closing the socket indicates
+            // to dbus-daemon that the process has disappeared and it will forcefully reclaim the registered service names.
+            //
+            // Once we close our socket we lose potential dbus names and if we were running as a systemd service anchored to a name,
+            // the daemon may decide to jump at us with a TERM signal. We'll want to have finished the metadata by now and
+            // be near our tracing/raise().
+            closeAllFDs();
+        }
+#if HAVE_X11
+        else if (QX11Info::display()) {
+            close(ConnectionNumber(QX11Info::display()));
+        }
+#endif
+#endif
+
         if (s_launchDrKonqi != 1) {
             setCrashHandler(nullptr);
 #if !defined(Q_OS_WIN)
@@ -460,106 +605,7 @@ void KCrash::defaultCrashHandler(int sig)
             return;
         }
 
-        // If someone is telling me to stop while I'm already crashing, then I should resume crashing
-        signal(SIGTERM, &crashOnSigTerm);
-
-        const char *argv[31]; // don't forget to update this
-        int i = 0;
-
-        // argument 0 has to be drkonqi
-        argv[i++] = s_drkonqiPath.get();
-
-        const QByteArray platformName = QGuiApplication::platformName().toUtf8();
-        if (!platformName.isEmpty()) {
-            argv[i++] = "-platform";
-            argv[i++] = platformName.constData();
-        }
-
-#if HAVE_X11
-        if (platformName == QByteArrayLiteral("xcb")) {
-            // start up on the correct display
-            argv[i++] = "-display";
-            if (QX11Info::display()) {
-                argv[i++] = XDisplayString(QX11Info::display());
-            } else {
-                argv[i++] = getenv("DISPLAY");
-            }
-        }
-#endif
-
-        argv[i++] = "--appname";
-        argv[i++] = s_appName ? s_appName.get() : "<unknown>";
-
-        if (loadedByKdeinit) {
-            argv[i++] = "--kdeinit";
-        }
-
-        // only add apppath if it's not NULL
-        if (s_appPath && s_appPath[0]) {
-            argv[i++] = "--apppath";
-            argv[i++] = s_appPath.get();
-        }
-
-        // signal number -- will never be NULL
-        char sigtxt[10];
-        sprintf(sigtxt, "%d", sig);
-        argv[i++] = "--signal";
-        argv[i++] = sigtxt;
-
-        char pidtxt[20];
-        sprintf(pidtxt, "%lld", QCoreApplication::applicationPid());
-        argv[i++] = "--pid";
-        argv[i++] = pidtxt;
-
-        const KAboutData *about = KAboutData::applicationDataPointer();
-        if (about) {
-            if (about->internalVersion()) {
-                argv[i++] = "--appversion";
-                argv[i++] = about->internalVersion();
-            }
-
-            if (about->internalProgramName()) {
-                argv[i++] = "--programname";
-                argv[i++] = about->internalProgramName();
-            }
-
-            if (about->internalBugAddress()) {
-                argv[i++] = "--bugaddress";
-                argv[i++] = about->internalBugAddress();
-            }
-
-            if (about->internalProductName()) {
-                argv[i++] = "--productname";
-                argv[i++] = about->internalProductName();
-            }
-        }
-
-        // make sure the constData() pointer remains valid when we call startProcess by making a copy
-        QByteArray startupId = KStartupInfo::startupId();
-        if (!startupId.isNull()) {
-            argv[i++] = "--startupid";
-            argv[i++] = startupId.constData();
-        }
-
-        if (s_flags & SaferDialog) {
-            argv[i++] = "--safer";
-        }
-
-        if ((s_flags & AutoRestart) && s_autoRestartCommandLine) {
-            argv[i++] = "--restarted"; // tell drkonqi if the app has been restarted
-        }
-
-#if defined(Q_OS_WIN)
-        char threadId[8] = {0};
-        sprintf(threadId, "%d", GetCurrentThreadId());
-        argv[i++] = "--thread";
-        argv[i++] = threadId;
-#endif
-
-        // NULL terminated list
-        argv[i] = nullptr;
-
-        startProcess(i, argv, true);
+        startProcess(argc, argv, true);
     }
 
     if (crashRecursionCounter < 4) {

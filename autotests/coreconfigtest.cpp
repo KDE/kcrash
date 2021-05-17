@@ -1,5 +1,5 @@
 /*
-    SPDX-FileCopyrightText: 2016 Harald Sitter <sitter@kde.org>
+    SPDX-FileCopyrightText: 2016-2021 Harald Sitter <sitter@kde.org>
 
     SPDX-License-Identifier: LGPL-2.0-or-later
 */
@@ -21,9 +21,22 @@ private Q_SLOTS:
         KCrash::CoreConfig c(QFINDTESTDATA("core_patterns/exec"));
 #ifdef KCRASH_CORE_PATTERN_RAISE
         QCOMPARE(c.isProcess(), true);
+        QCOMPARE(c.isCoredumpd(), true);
 #else
         QCOMPARE(c.isProcess(), false);
+        QCOMPARE(c.isCoredumpd(), false);
 #endif
+    }
+
+    void testExecNot()
+    {
+#ifndef KCRASH_CORE_PATTERN_RAISE
+        QSKIP("Not useful when opting out of re-raising.")
+#endif
+
+        KCrash::CoreConfig c(QFINDTESTDATA("core_patterns/exec-apport"));
+        QCOMPARE(c.isProcess(), true);
+        QCOMPARE(c.isCoredumpd(), false);
     }
 
     void testNoFile()

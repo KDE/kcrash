@@ -38,3 +38,8 @@ ecm_add_tests(
   coreconfigtest.cpp
   LINK_LIBRARIES Qt5::Core Qt5::Test
 )
+
+ecm_add_tests(
+  metadatatest.cpp
+  LINK_LIBRARIES Qt5::Core Qt5::Test
+)
