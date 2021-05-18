@@ -6,6 +6,7 @@
 #include "metadata_p.h"
 
 #include <QByteArray>
+#include <cerrno>
 
 #ifdef Q_OS_LINUX
 #include <cstring>
