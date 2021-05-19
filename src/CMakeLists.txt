@@ -1,5 +1,7 @@
+add_library(KF5Crash)
+add_library(KF5::Crash ALIAS KF5Crash)
 
-set(kcrash_SRCS
+target_sources(KF5Crash PRIVATE
   kcrash.cpp
   coreconfig.cpp
   metadata.cpp
@@ -19,9 +21,7 @@ ecm_qt_export_logging_category(
     EXPORT KCRASH
 )
 
-add_library(KF5Crash ${kcrash_SRCS})
 generate_export_header(KF5Crash BASE_NAME KCrash)
-add_library(KF5::Crash ALIAS KF5Crash)
 
 target_include_directories(KF5Crash INTERFACE "$<INSTALL_INTERFACE:${KDE_INSTALL_INCLUDEDIR_KF5}/KCrash>")
 
