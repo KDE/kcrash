@@ -5,7 +5,6 @@ target_sources(KF5Crash PRIVATE
   kcrash.cpp
   coreconfig.cpp
   metadata.cpp
-  ${kcrash_QM_LOADER}
 )
 
 configure_file(
