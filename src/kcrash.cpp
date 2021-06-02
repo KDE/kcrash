@@ -196,6 +196,25 @@ LONG WINAPI win32UnhandledExceptionFilter(_EXCEPTION_POINTERS *exceptionInfo);
 #endif
 }
 
+// False when the crash handler should definitely not get auto enabled.
+// The app may still choose to set the handler manually, at which point whatever goes wrong is not our fault.
+static bool shouldHandleCrash()
+{
+    return !qEnvironmentVariableIsSet("KCRASH_AUTO_RESTARTED") // never handle auto restarted apps lest we cause a crash loop by autostarting it again
+        && !qEnvironmentVariableIntValue("RUNNING_UNDER_RR") // never handle crashes under mozilla's RR framework it expects process to end
+        ;
+}
+
+// True when drkonqi should be invoked directly for just-in-time debugging. This being false doesn't necessarily
+// mean that drkonqi is not getting started, it is just not getting started by kcrash!
+// This does imply that our crash handler gets set up.
+static bool shouldUseDrKonqi()
+{
+    return !qEnvironmentVariableIsSet("KDE_DEBUG") && qEnvironmentVariableIntValue("KCRASH_DUMP_ONLY") == 0;
+}
+
+// True when metadata files should be written to disk. conditional on systemd-coredump.
+// This does imply that our crash handler gets set up.
 static bool shouldWriteMetadataToDisk()
 {
 #ifdef Q_OS_LINUX
@@ -215,11 +234,7 @@ void KCrash::initialize()
         return;
     }
     const QStringList args = QCoreApplication::arguments();
-    if (!qEnvironmentVariableIsSet("KDE_DEBUG") //
-        && !qEnvironmentVariableIsSet("KCRASH_AUTO_RESTARTED") //
-        && !qEnvironmentVariableIntValue("RUNNING_UNDER_RR") //
-        && qEnvironmentVariableIntValue("KCRASH_DUMP_ONLY") == 0) {
-        // enable drkonqi
+    if (shouldHandleCrash() && shouldUseDrKonqi()) {
         KCrash::setDrKonqiEnabled(true);
     } else {
         // This loads qtlogging.ini very early which prevents unittests from doing QStandardPaths::setTestModeEnabled(true) in initTestCase()
