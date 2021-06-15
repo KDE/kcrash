@@ -41,7 +41,7 @@ private Q_SLOTS:
 
     void testNoFile()
     {
-        KCrash::CoreConfig c("/meow/kitteh/meow");
+        KCrash::CoreConfig c(QStringLiteral("/meow/kitteh/meow"));
         QCOMPARE(c.isProcess(), false);
     }
 
