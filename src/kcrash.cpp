@@ -59,6 +59,7 @@ Q_LOGGING_CATEGORY(LOG_KCRASH, "kf.crash", QtInfoMsg)
 #endif
 
 #include "coreconfig_p.h"
+#include "kcrash_version.h"
 #include "metadata_p.h"
 
 // Copy from klauncher_cmds
@@ -210,7 +211,20 @@ static bool shouldHandleCrash()
 // This does imply that our crash handler gets set up.
 static bool shouldUseDrKonqi()
 {
-    return !qEnvironmentVariableIsSet("KDE_DEBUG") && qEnvironmentVariableIntValue("KCRASH_DUMP_ONLY") == 0;
+#if KCrash_VERSION < QT_VERSION_CHECK(6, 0, 0)
+    // TODO KF6 update api docs to say KDE_DEBUG must be non-zero, also drop ifdefs
+    if (qEnvironmentVariableIsSet("KDE_DEBUG") && qEnvironmentVariableIntValue("KDE_DEBUG") == 0) {
+        qWarning() << "KDE_DEBUG=0 is set. Please note that this currently disables debugging but in KF6 it will not, use a non-zero value";
+    }
+#endif
+
+    return
+#if KCrash_VERSION >= QT_VERSION_CHECK(6, 0, 0)
+        qEnvironmentVariableIntValue("KDE_DEBUG") == 0
+#else
+        !qEnvironmentVariableIsSet("KDE_DEBUG")
+#endif
+        && qEnvironmentVariableIntValue("KCRASH_DUMP_ONLY") == 0;
 }
 
 // True when metadata files should be written to disk. conditional on systemd-coredump.
@@ -222,7 +236,7 @@ static bool shouldWriteMetadataToDisk()
     // the daemon may already be gone but we'll still want to deal with the crash on next login!
     // Similar reasoning applies to not checking the presence of the launcher socket.
     const bool drkonqiCoredumpHelper = !QStandardPaths::findExecutable(QStringLiteral("drkonqi-coredump-processor"), libexecPaths()).isEmpty();
-    return s_coreConfig()->isCoredumpd() && drkonqiCoredumpHelper && !qEnvironmentVariableIsSet("KCRASH_NO_METADATA");
+    return s_coreConfig()->isCoredumpd() && drkonqiCoredumpHelper && qEnvironmentVariableIntValue("KCRASH_NO_METADATA") == 0;
 #else
     return false;
 #endif
