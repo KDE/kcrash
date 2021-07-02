@@ -36,7 +36,7 @@ option(BUILD_QCH "Build API documentation in QCH format (for e.g. Qt Assistant, 
 add_feature_info(QCH ${BUILD_QCH} "API documentation in QCH format (for e.g. Qt Assistant, Qt Creator & KDevelop)")
 
 ecm_setup_version(PROJECT VARIABLE_PREFIX KCrash
-                        VERSION_HEADER "${CMAKE_CURRENT_BINARY_DIR}/kcrash_version.h"
+                        VERSION_HEADER "${CMAKE_CURRENT_BINARY_DIR}/src/kcrash_version.h"
                         PACKAGE_VERSION_FILE "${CMAKE_CURRENT_BINARY_DIR}/KF5CrashConfigVersion.cmake"
                         SOVERSION 5)
 
@@ -90,7 +90,7 @@ install(FILES
 install(EXPORT KF5CrashTargets DESTINATION "${CMAKECONFIG_INSTALL_DIR}" FILE KF5CrashTargets.cmake NAMESPACE KF5:: )
 
 install(FILES
-   ${CMAKE_CURRENT_BINARY_DIR}/kcrash_version.h
+   ${CMAKE_CURRENT_BINARY_DIR}/src/kcrash_version.h
   DESTINATION ${KDE_INSTALL_INCLUDEDIR_KF5} COMPONENT Devel
 )
 
