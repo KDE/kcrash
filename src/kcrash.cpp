@@ -230,9 +230,6 @@ static bool shouldWriteMetadataToDisk()
 
 void KCrash::initialize()
 {
-    // WARNING: Be mindful of when to qCDebug in here. It may load qtlogging super early and get in the way of setting up
-    // qtest-specific logging rules. It's probably best to only log actual problems, not general purpose info about what's going on.
-
     if (s_launchDrKonqi == 0) { // disabled by the program itself
         return;
     }
@@ -240,8 +237,12 @@ void KCrash::initialize()
         return;
     }
 
+    const QStringList args = QCoreApplication::arguments();
     if (shouldUseDrKonqi()) {
         KCrash::setDrKonqiEnabled(true);
+    } else {
+        // This loads qtlogging.ini very early which prevents unittests from doing QStandardPaths::setTestModeEnabled(true) in initTestCase()
+        // qCDebug(LOG_KCRASH) << "KCrash disabled through environment.";
     }
 
     if (QCoreApplication::instance()) {
