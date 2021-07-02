@@ -233,12 +233,8 @@ void KCrash::initialize()
     if (s_launchDrKonqi == 0) { // disabled by the program itself
         return;
     }
-    if (shouldHandleCrash()) { // disabled by environment
-        return;
-    }
-
     const QStringList args = QCoreApplication::arguments();
-    if (shouldUseDrKonqi()) {
+    if (shouldHandleCrash() && shouldUseDrKonqi()) {
         KCrash::setDrKonqiEnabled(true);
     } else {
         // This loads qtlogging.ini very early which prevents unittests from doing QStandardPaths::setTestModeEnabled(true) in initTestCase()
