@@ -30,9 +30,7 @@ class QString;
  * explicitly. By default, the defaultCrashHandler() will not do anything.
  * However, if you are using KApplication, it will by default enable launching
  * DrKonqi on crashes, unless the --nocrashhandler argument was passed on
- * the command line or the environment variable KDE_DEBUG is set to any value (
- * this is going to change to non-zero values in 6.0.0)
- )
+ * the command line or the environment variable KDE_DEBUG is set to any value.
  */
 namespace KCrash
 {
