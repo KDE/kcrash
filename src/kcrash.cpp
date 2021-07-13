@@ -472,7 +472,7 @@ void KCrash::defaultCrashHandler(int sig)
 #ifdef Q_OS_LINUX
         if (!s_metadataPath.isEmpty()) {
             MetadataINIWriter ini(s_metadataPath);
-            // Add the canonical exe path so the coredump daemon has more data points to map metdata to journald entry.
+            // Add the canonical exe path so the coredump daemon has more data points to map metadata to journald entry.
             ini.add("--exe", s_appFilePath.get(), MetadataWriter::BoolValue::No);
             writer = &ini;
         }

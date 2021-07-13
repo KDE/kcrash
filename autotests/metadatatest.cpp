@@ -30,7 +30,7 @@ private Q_SLOTS:
         data.close();
         const int argc = data.argc;
         QCOMPARE(argc, 4);
-        QCOMPARE(data.argv.at(0), QStringLiteral("BEFEHL")); // make sure we do stringy comparision
+        QCOMPARE(data.argv.at(0), QStringLiteral("BEFEHL")); // make sure we do stringy comparison
         QCOMPARE(data.argv.at(1), QStringLiteral("--ABC"));
         QCOMPARE(data.argv.at(2), QStringLiteral("FOO"));
         QCOMPARE(data.argv.at(3), QStringLiteral("--Meow"));

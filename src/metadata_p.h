@@ -32,7 +32,7 @@ private:
 };
 
 #ifdef Q_OS_LINUX
-// This writes the metdata file. Only really useful on Linux for now as this needs
+// This writes the metadata file. Only really useful on Linux for now as this needs
 // cleanup by a helper daemon later. Also, this is only ever useful when coredump is in use.
 class MetadataINIWriter : public MetadataWriter
 {
