@@ -24,7 +24,8 @@ private Q_SLOTS:
         MetadataINIWriter iniWriter(iniFile.toLocal8Bit());
         writer = &iniWriter;
 #endif
-        Metadata data("BEFEHL", writer);
+        Metadata data("BEFEHL");
+        data.setAdditionalWriter(writer);
         data.add("--ABC", "FOO");
         data.addBool("--Meow");
         data.close();
@@ -50,7 +51,7 @@ private Q_SLOTS:
     void testNoFile()
     {
         // Doesn't explode without writer
-        Metadata data("BEFEHL", nullptr);
+        Metadata data("BEFEHL");
         data.add("--ABC", "FOO");
         data.close();
         const int argc = data.argc;

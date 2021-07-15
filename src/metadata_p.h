@@ -43,7 +43,11 @@ public:
     void add(const char *key, const char *value, BoolValue boolValue) override;
     void close() override;
 
+    // open or not, all functions are generally save to call without checking this
+    [[nodiscard]] bool isWritable() const;
+
 private:
+    bool writable = false;
     int fd = -1;
     std::array<char, 1024> iniLine{}; // arbitrary max size
 
@@ -57,8 +61,11 @@ private:
 class Metadata : public MetadataWriter
 {
 public:
-    Metadata(const char *cmd, MetadataWriter *writer);
+    explicit Metadata(const char *cmd);
     ~Metadata() override = default;
+
+    // Add an additional writer that should receive write calls as well. Do not call this after having called add.
+    void setAdditionalWriter(MetadataWriter *writer);
 
     void add(const char *key, const char *value);
     void addBool(const char *key);

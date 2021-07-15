@@ -21,13 +21,21 @@ namespace KCrash
 #ifdef Q_OS_LINUX
 MetadataINIWriter::MetadataINIWriter(const QByteArray &path)
     : MetadataWriter()
-    , fd(::open(path.constData(), O_WRONLY | O_CREAT | O_NONBLOCK | O_TRUNC | O_CLOEXEC, S_IRUSR | S_IWUSR))
 {
+    if (path.isEmpty()) {
+        return;
+    }
+
+    fd = ::open(path.constData(), O_WRONLY | O_CREAT | O_NONBLOCK | O_TRUNC | O_CLOEXEC, S_IRUSR | S_IWUSR);
     if (fd == -1) {
         fprintf(stderr, "Failed to open metadata file: %s\n", strerror(errno));
-    } else {
+    } else if (fd >= 0) {
+        writable = true;
         const char *header = "[KCrash]\n";
         write(fd, header, strlen(header));
+    } else {
+        fprintf(stderr, "MetadataINIWriter: Unexpected fd %d\n", fd);
+        Q_UNREACHABLE();
     }
 }
 
@@ -36,6 +44,7 @@ void MetadataINIWriter::close()
     if (fd >= 0 && ::close(fd) == -1) {
         fprintf(stderr, "Failed to close metadata file: %s\n", strerror(errno));
     }
+    writable = false;
 }
 
 void MetadataINIWriter::add(const char *key, const char *value, BoolValue boolValue)
@@ -59,16 +68,28 @@ void MetadataINIWriter::add(const char *key, const char *value, BoolValue boolVa
     Q_ASSERT(lineLength <= iniLine.max_size()); // is not truncated41
     write(fd, iniLine.data(), lineLength);
 }
+
+bool MetadataINIWriter::isWritable() const
+{
+    return writable;
+}
 #endif
 
-Metadata::Metadata(const char *cmd, MetadataWriter *writer)
-    : MetadataWriter()
-    , m_writer(writer)
+Metadata::Metadata(const char *cmd)
 {
     // NB: cmd may be null! Just because we create metadata doesn't mean we'll execute drkonqi (we may only need the
     // backing writers)
     Q_ASSERT(argc == 0);
     argv.at(argc++) = cmd;
+}
+
+void Metadata::setAdditionalWriter(MetadataWriter *writer)
+{
+    // Once set the writer oughtn't be reset as we have no use case for this and should we get one in the future
+    // it'll need at least review of the existing code to handle writer switching correctly.
+    Q_ASSERT(m_writer == nullptr);
+    Q_ASSERT(writer != nullptr);
+    m_writer = writer;
 }
 
 void Metadata::add(const char *key, const char *value)

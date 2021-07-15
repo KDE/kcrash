@@ -467,18 +467,20 @@ void KCrash::defaultCrashHandler(int sig)
         // If someone is telling me to stop while I'm already crashing, then I should resume crashing
         signal(SIGTERM, &crashOnSigTerm);
 
-        // NB: metadata writing ought to happen before closing FDs to reduce synchronization problems with dbus.
-        MetadataWriter *writer = nullptr;
+        // NB: all metadata writing ought to happen before closing FDs to reduce synchronization problems with dbus.
+
+        // WARNING: do not forget to increase Metadata::argv's size when adding more potential arguments!
+        Metadata data(s_drkonqiPath.get());
 #ifdef Q_OS_LINUX
-        if (!s_metadataPath.isEmpty()) {
-            MetadataINIWriter ini(s_metadataPath);
+        // The ini is required to be scoped here, as opposed to the conditional scope, so its lifetime is the same as
+        // the regular data instance!
+        MetadataINIWriter ini(s_metadataPath);
+        if (ini.isWritable()) {
             // Add the canonical exe path so the coredump daemon has more data points to map metadata to journald entry.
             ini.add("--exe", s_appFilePath.get(), MetadataWriter::BoolValue::No);
-            writer = &ini;
+            data.setAdditionalWriter(&ini);
         }
 #endif
-        // WARNING: do not forget to increase Metadata::argv's size when adding more potential arguments!
-        Metadata data(s_drkonqiPath.get(), writer);
 
         const QByteArray platformName = QGuiApplication::platformName().toUtf8();
         if (!platformName.isEmpty()) {
