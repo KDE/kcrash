@@ -851,10 +851,11 @@ static int pollDrKonqiSocket(pid_t pid, int sockfd)
         r = poll(&fd, 1, 1000); // wait for 1 second for a request by DrKonqi
     } while (r == -1 && errno == EINTR);
     // only continue if POLLIN event returned
-    if (r == 0) // timeout
+    if (r == 0) { // timeout
         return 0;
-    else if (r == -1 || !(fd.revents & POLLIN)) // some error
+    } else if (r == -1 || !(fd.revents & POLLIN)) { // some error
         return -1;
+    }
 
     static struct sockaddr_un drkonqi_client;
     static socklen_t cllength = sizeof(drkonqi_client);
@@ -862,14 +863,16 @@ static int pollDrKonqiSocket(pid_t pid, int sockfd)
     do {
         clsockfd = accept(sockfd, (struct sockaddr *)&drkonqi_client, &cllength);
     } while (clsockfd == -1 && errno == EINTR);
-    if (clsockfd < 0)
+    if (clsockfd < 0) {
         return -1;
+    }
 
     // check whether the message is coming from DrKonqi
     static struct ucred ucred;
     static socklen_t credlen = sizeof(struct ucred);
-    if (getsockopt(clsockfd, SOL_SOCKET, SO_PEERCRED, &ucred, &credlen) < 0)
+    if (getsockopt(clsockfd, SOL_SOCKET, SO_PEERCRED, &ucred, &credlen) < 0) {
         return -1;
+    }
 
     if (ucred.pid != pid) {
         fprintf(stderr, "Warning: peer pid does not match DrKonqi pid\n");

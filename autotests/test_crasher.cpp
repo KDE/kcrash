@@ -48,8 +48,9 @@ int main(int argc, char **argv)
 #endif
 
     output.setFileName(QStringLiteral("kcrashtest_log"));
-    if (!output.open(QIODevice::WriteOnly | QIODevice::Append))
+    if (!output.open(QIODevice::WriteOnly | QIODevice::Append)) {
         return 1;
+    }
     if (qEnvironmentVariableIsEmpty("KCRASH_AUTO_RESTARTED")) {
         output.write("starting ");
         output.write(flag);
