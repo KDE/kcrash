@@ -20,7 +20,6 @@ include(KDEGitCommitHooks)
 
 if (UNIX AND NOT APPLE AND NOT ANDROID)
     find_package(X11)
-    find_package(Qt5 ${REQUIRED_QT_VERSION} CONFIG REQUIRED COMPONENTS X11Extras)
 endif()
 
 set(HAVE_X11 ${X11_FOUND})
