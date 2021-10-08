@@ -38,8 +38,7 @@ endif ()
 
 if(${X11_FOUND})
   find_package(Qt5X11Extras ${REQUIRED_QT_VERSION} REQUIRED NO_MODULE)
-  target_link_libraries(KF5Crash PRIVATE Qt5::X11Extras ${X11_LIBRARIES})
-  target_include_directories(KF5Crash PRIVATE ${X11_X11_INCLUDE_PATH})
+  target_link_libraries(KF5Crash PRIVATE Qt5::X11Extras X11::X11)
 endif()
 
 set_target_properties(KF5Crash PROPERTIES VERSION   ${KCrash_VERSION}
