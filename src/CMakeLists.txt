@@ -36,8 +36,7 @@ if (CMAKE_SYSTEM_NAME MATCHES "FreeBSD")
     string(REPLACE "-Wl,--no-undefined" "" CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS}")
 endif ()
 
-if(${X11_FOUND})
-  find_package(Qt5X11Extras ${REQUIRED_QT_VERSION} REQUIRED NO_MODULE)
+if(WITH_X11)
   target_link_libraries(KF5Crash PRIVATE Qt5::X11Extras X11::X11)
 endif()
 

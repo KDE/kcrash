@@ -19,11 +19,16 @@ include(KDECMakeSettings)
 include(KDEGitCommitHooks)
 
 if (UNIX AND NOT APPLE AND NOT ANDROID)
-    find_package(X11)
+    option(WITH_X11 "Build with X11 integration" ON)
+else()
+    set(WITH_X11 OFF)
 endif()
 
-set(HAVE_X11 ${X11_FOUND})
-
+if (WITH_X11)
+    find_package(X11 REQUIRED)
+    find_package(Qt5X11Extras ${REQUIRED_QT_VERSION} REQUIRED NO_MODULE)
+    set(HAVE_X11 TRUE)
+endif()
 
 include(GenerateExportHeader)
 include(ECMSetupVersion)
