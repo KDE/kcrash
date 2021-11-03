@@ -672,10 +672,11 @@ LONG WINAPI KCrash::win32UnhandledExceptionFilter(_EXCEPTION_POINTERS *exception
 #else
 
 static pid_t startDirectly(const char *argv[]);
+
+#ifdef Q_OS_LINUX
 static int write_socket(int sock, char *buffer, int len);
 static int read_socket(int sock, char *buffer, int len);
 
-#ifdef Q_OS_LINUX
 static int openDrKonqiSocket(const QByteArray &socketpath);
 static int pollDrKonqiSocket(pid_t pid, int sockfd);
 #endif
@@ -764,6 +765,8 @@ static pid_t startDirectly(const char *argv[])
     }
 }
 
+#ifdef Q_OS_LINUX
+
 /*
  * Write 'len' bytes from 'buffer' into 'sock'.
  * returns 0 on success, -1 on failure.
@@ -807,8 +810,6 @@ static int read_socket(int sock, char *buffer, int len)
     }
     return 0;
 }
-
-#ifdef Q_OS_LINUX
 
 static int openDrKonqiSocket(const QByteArray &socketpath)
 {
