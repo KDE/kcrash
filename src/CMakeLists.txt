@@ -2,9 +2,12 @@ add_library(KF5Crash)
 add_library(KF5::Crash ALIAS KF5Crash)
 
 target_sources(KF5Crash PRIVATE
-  kcrash.cpp
-  coreconfig.cpp
-  metadata.cpp
+    coreconfig.cpp
+    coreconfig_p.h
+    kcrash.cpp
+    kcrash.h
+    metadata.cpp
+    metadata_p.h
 )
 
 configure_file(
