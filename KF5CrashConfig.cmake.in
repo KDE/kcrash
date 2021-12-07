@@ -3,14 +3,18 @@
 # Any changes in this file will be overwritten by CMake.
 
 include(CMakeFindDependencyMacro)
-find_dependency(Qt5Core @REQUIRED_QT_VERSION@)
+find_dependency(Qt@QT_MAJOR_VERSION@Core @REQUIRED_QT_VERSION@)
 
 if (NOT @BUILD_SHARED_LIBS@)
     find_dependency(KF5CoreAddons REQUIRED)
     find_dependency(KF5WindowSystem REQUIRED)
 
     if (@WITH_X11@)
-        find_dependency(Qt5X11Extras REQUIRED)
+        if (@Qt5X11Extras_FOUND@)
+            find_dependency(Qt5X11Extras REQUIRED)
+        elseif(@Qt6Gui_Found@)
+            find_dependency(Qt6Gui REQUIRED) # Gui/private/qtx11extras_p.h
+        endif()
         find_dependency(X11 REQUIRED)
     endif()
 endif()

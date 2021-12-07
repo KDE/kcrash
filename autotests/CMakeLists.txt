@@ -2,16 +2,15 @@ remove_definitions(-DQT_NO_CAST_FROM_ASCII)
 
 include(ECMAddTests)
 
-find_package(Qt5Test ${REQUIRED_QT_VERSION} CONFIG QUIET)
-find_package(Qt5Widgets ${REQUIRED_QT_VERSION} CONFIG QUIET)
+find_package(Qt${QT_MAJOR_VERSION}Widgets ${REQUIRED_QT_VERSION} CONFIG QUIET)
 
-if(NOT Qt5Test_FOUND)
-    message(STATUS "Qt5Test not found, autotests will not be built.")
+if(NOT TARGET Qt${QT_MAJOR_VERSION}::Test)
+    message(STATUS "Qt${QT_MAJOR_VERSION}Test not found, autotests will not be built.")
     return()
 endif()
 
-if(NOT Qt5Widgets_FOUND)
-    message(STATUS "Qt5Widgets not found, autotests will not be built.")
+if(NOT Qt${QT_MAJOR_VERSION}Widgets_FOUND)
+    message(STATUS "Qt${QT_MAJOR_VERSION}Widgets not found, autotests will not be built.")
     return()
 endif()
 
@@ -23,11 +22,11 @@ include_directories(${CMAKE_CURRENT_BINARY_DIR}/../src)
 if(NOT WIN32)
     ecm_add_tests(
         kcrashtest.cpp
-        LINK_LIBRARIES Qt5::Core Qt5::Test
+        LINK_LIBRARIES Qt${QT_MAJOR_VERSION}::Core Qt${QT_MAJOR_VERSION}::Test
     )
 
     add_executable(test_crasher test_crasher.cpp)
-    target_link_libraries(test_crasher Qt5::Widgets KF5::Crash)
+    target_link_libraries(test_crasher Qt${QT_MAJOR_VERSION}::Widgets KF5::Crash)
     ecm_mark_as_test(test_crasher)
     ecm_mark_nongui_executable(test_crasher)
 
@@ -36,10 +35,10 @@ endif()
 
 ecm_add_tests(
   coreconfigtest.cpp
-  LINK_LIBRARIES Qt5::Core Qt5::Test
+  LINK_LIBRARIES Qt${QT_MAJOR_VERSION}::Core Qt${QT_MAJOR_VERSION}::Test
 )
 
 ecm_add_tests(
   metadatatest.cpp
-  LINK_LIBRARIES Qt5::Core Qt5::Test
+  LINK_LIBRARIES Qt${QT_MAJOR_VERSION}::Core Qt${QT_MAJOR_VERSION}::Test
 )

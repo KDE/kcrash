@@ -25,9 +25,9 @@ ecm_qt_export_logging_category(
 
 generate_export_header(KF5Crash BASE_NAME KCrash)
 
-target_include_directories(KF5Crash INTERFACE "$<INSTALL_INTERFACE:${KDE_INSTALL_INCLUDEDIR_KF5}/KCrash>")
+target_include_directories(KF5Crash INTERFACE "$<INSTALL_INTERFACE:${KDE_INSTALL_INCLUDEDIR_KF}/KCrash>")
 
-target_link_libraries(KF5Crash PUBLIC Qt5::Core)
+target_link_libraries(KF5Crash PUBLIC Qt${QT_MAJOR_VERSION}::Core)
 target_link_libraries(KF5Crash PRIVATE KF5::CoreAddons KF5::WindowSystem)
 
 # FIXME: It is needed to work around undefined reference error on FreeBSD
@@ -40,7 +40,13 @@ if (CMAKE_SYSTEM_NAME MATCHES "FreeBSD")
 endif ()
 
 if(WITH_X11)
-  target_link_libraries(KF5Crash PRIVATE Qt5::X11Extras X11::X11)
+    if (TARGET Qt5::X11Extras)
+        set(_qt_x11_libs Qt5::X11Extras)
+    elseif (TARGET Qt6::Gui)
+        set(_qt_x11_libs Qt6::GuiPrivate) # Gui/private/qtx11extras_p.h
+    endif()
+
+    target_link_libraries(KF5Crash PRIVATE X11::X11 ${_qt_x11_libs})
 endif()
 
 set_target_properties(KF5Crash PROPERTIES VERSION   ${KCrash_VERSION}
@@ -60,7 +66,7 @@ install(TARGETS KF5Crash EXPORT KF5CrashTargets ${KF5_INSTALL_TARGETS_DEFAULT_AR
 install(FILES
   ${CMAKE_CURRENT_BINARY_DIR}/kcrash_export.h
   ${KCrash_HEADERS}
-  DESTINATION ${KDE_INSTALL_INCLUDEDIR_KF5}/KCrash COMPONENT Devel
+  DESTINATION ${KDE_INSTALL_INCLUDEDIR_KF}/KCrash COMPONENT Devel
 )
 
 ecm_qt_install_logging_categories(
@@ -94,5 +100,5 @@ if(BUILD_QCH)
 endif()
 
 include(ECMGeneratePriFile)
-ecm_generate_pri_file(BASE_NAME KCrash LIB_NAME KF5Crash DEPS "core" FILENAME_VAR PRI_FILENAME INCLUDE_INSTALL_DIR ${KDE_INSTALL_INCLUDEDIR_KF5}/KCrash)
+ecm_generate_pri_file(BASE_NAME KCrash LIB_NAME KF5Crash DEPS "core" FILENAME_VAR PRI_FILENAME INCLUDE_INSTALL_DIR ${KDE_INSTALL_INCLUDEDIR_KF}/KCrash)
 install(FILES ${PRI_FILENAME} DESTINATION ${ECM_MKSPECS_INSTALL_DIR})
