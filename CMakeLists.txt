@@ -62,7 +62,7 @@ add_feature_info("Core Pattern Raising"
     "Raising signals to kernel core patterns (iff the pattern is a process). You may wish to not install drkonqi if this can cause a UI conflict.")
 
 add_definitions(-DQT_DISABLE_DEPRECATED_BEFORE=0x050f02)
-add_definitions(-DKF_DISABLE_DEPRECATED_BEFORE_AND_AT=0x055100)
+add_definitions(-DKF_DISABLE_DEPRECATED_BEFORE_AND_AT=0x055900)
 add_subdirectory(src)
 if (BUILD_TESTING)
     add_subdirectory(autotests)
