@@ -10,9 +10,9 @@ if (NOT @BUILD_SHARED_LIBS@)
     find_dependency(KF5WindowSystem REQUIRED)
 
     if (@WITH_X11@)
-        if (@Qt5X11Extras_FOUND@)
+        if (TARGET Qt5::Core)
             find_dependency(Qt5X11Extras REQUIRED)
-        elseif(@Qt6Gui_Found@)
+        elseif(TARGET Qt6::Core)
             find_dependency(Qt6Gui REQUIRED) # Gui/private/qtx11extras_p.h
         endif()
         find_dependency(X11 REQUIRED)
