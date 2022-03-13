@@ -5,6 +5,7 @@ type: integration
 platforms:
     - name: Linux
     - name: FreeBSD
+    - name: macOS
     - name: Windows
 portingAid: false
 deprecated: false
