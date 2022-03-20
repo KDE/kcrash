@@ -19,13 +19,11 @@ private Q_SLOTS:
         QVERIFY(tmpDir.isValid());
 
         const QString iniFile = QStringLiteral("%1/foo.ini").arg(tmpDir.path());
-        MetadataWriter *writer = nullptr;
+        Metadata data("BEFEHL");
 #ifdef Q_OS_LINUX
         MetadataINIWriter iniWriter(iniFile.toLocal8Bit());
-        writer = &iniWriter;
+        data.setAdditionalWriter(&iniWriter);
 #endif
-        Metadata data("BEFEHL");
-        data.setAdditionalWriter(writer);
         data.add("--ABC", "FOO");
         data.addBool("--Meow");
         data.close();
