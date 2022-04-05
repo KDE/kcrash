@@ -7,4 +7,4 @@ Dependencies:
 
 Options:
   test-before-installing: True
-  require-passing-tests-on: [ 'Linux', 'FreeBSD' ]
+  require-passing-tests-on: [ 'Linux', 'FreeBSD', 'Windows' ]
