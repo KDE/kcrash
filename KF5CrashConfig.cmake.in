@@ -12,8 +12,6 @@ if (NOT @BUILD_SHARED_LIBS@)
     if (@WITH_X11@)
         if (TARGET Qt5::Core)
             find_dependency(Qt5X11Extras REQUIRED)
-        elseif(TARGET Qt6::Core)
-            find_dependency(Qt6Gui REQUIRED) # Gui/private/qtx11extras_p.h
         endif()
         find_dependency(X11 REQUIRED)
     endif()

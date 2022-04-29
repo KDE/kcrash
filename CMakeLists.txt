@@ -30,8 +30,6 @@ if (WITH_X11)
     find_package(X11 REQUIRED)
     if (QT_MAJOR_VERSION STREQUAL "5")
         find_package(Qt5 ${REQUIRED_QT_VERSION} CONFIG REQUIRED X11Extras)
-    elseif (QT_MAJOR_VERSION STREQUAL "6")
-        find_package(Qt${QT_MAJOR_VERSION} ${REQUIRED_QT_VERSION} CONFIG REQUIRED Gui) # Gui/private/qtx11extras_p.h
     endif()
     set(HAVE_X11 TRUE)
 endif()

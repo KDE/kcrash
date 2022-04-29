@@ -40,13 +40,11 @@ if (CMAKE_SYSTEM_NAME MATCHES "FreeBSD")
 endif ()
 
 if(WITH_X11)
-    if (TARGET Qt5::X11Extras)
-        set(_qt_x11_libs Qt5::X11Extras)
-    elseif (TARGET Qt6::Gui)
-        set(_qt_x11_libs Qt6::GuiPrivate) # Gui/private/qtx11extras_p.h
+    if (QT_MAJOR_VERSION STREQUAL "5")
+      target_link_libraries(KF5Crash PRIVATE Qt5::X11Extras)
     endif()
 
-    target_link_libraries(KF5Crash PRIVATE X11::X11 ${_qt_x11_libs})
+    target_link_libraries(KF5Crash PRIVATE X11::X11)
 endif()
 
 set_target_properties(KF5Crash PROPERTIES VERSION   ${KCrash_VERSION}

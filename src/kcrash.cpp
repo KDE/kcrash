@@ -55,9 +55,7 @@ Q_LOGGING_CATEGORY(LOG_KCRASH, "kf.crash", QtInfoMsg)
 
 #if HAVE_X11
 #include <X11/Xlib.h>
-#if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
-#include <private/qtx11extras_p.h>
-#else
+#if QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
 #include <QX11Info>
 #endif
 #endif
@@ -495,8 +493,13 @@ void KCrash::defaultCrashHandler(int sig)
         if (platformName == QByteArrayLiteral("xcb")) {
             // start up on the correct display
             char *display = nullptr;
+#if QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
             if (QX11Info::display()) {
                 display = XDisplayString(QX11Info::display());
+#else
+            if (auto disp = qGuiApp->nativeInterface<QNativeInterface::QX11Application>()->display()) {
+                display = XDisplayString(disp);
+#endif
             } else {
                 display = getenv("DISPLAY");
             }
@@ -597,9 +600,15 @@ void KCrash::defaultCrashHandler(int sig)
             closeAllFDs();
         }
 #if HAVE_X11
+#if QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
         else if (QX11Info::display()) {
             close(ConnectionNumber(QX11Info::display()));
         }
+#else
+        else if (auto display = qGuiApp->nativeInterface<QNativeInterface::QX11Application>()->display()) {
+            close(ConnectionNumber(display));
+        }
+#endif
 #endif
 #endif
 
