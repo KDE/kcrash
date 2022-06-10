@@ -13,7 +13,7 @@ namespace KCrash
 {
 CoreConfig::CoreConfig(const QString &path)
 {
-#ifndef KCRASH_CORE_PATTERN_RAISE
+#if !KCRASH_CORE_PATTERN_RAISE
     return; // Leave everything false unless enabled.
 #endif
     QFile file(path);

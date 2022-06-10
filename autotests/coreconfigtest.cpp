@@ -19,7 +19,7 @@ private Q_SLOTS:
     void testExec()
     {
         KCrash::CoreConfig c(QFINDTESTDATA("core_patterns/exec"));
-#ifdef KCRASH_CORE_PATTERN_RAISE
+#if KCRASH_CORE_PATTERN_RAISE
         QCOMPARE(c.isProcess(), true);
         QCOMPARE(c.isCoredumpd(), true);
 #else
@@ -30,7 +30,7 @@ private Q_SLOTS:
 
     void testExecNot()
     {
-#ifndef KCRASH_CORE_PATTERN_RAISE
+#if !KCRASH_CORE_PATTERN_RAISE
         QSKIP("Not useful when opting out of re-raising.")
 #endif
 
