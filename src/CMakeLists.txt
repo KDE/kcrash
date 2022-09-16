@@ -59,7 +59,7 @@ ecm_generate_headers(KCrash_HEADERS
   REQUIRED_HEADERS KCrash_HEADERS
 )
 
-install(TARGETS KF5Crash EXPORT KF5CrashTargets ${KF5_INSTALL_TARGETS_DEFAULT_ARGS})
+install(TARGETS KF5Crash EXPORT KF5CrashTargets ${KF_INSTALL_TARGETS_DEFAULT_ARGS})
 
 install(FILES
   ${CMAKE_CURRENT_BINARY_DIR}/kcrash_export.h
