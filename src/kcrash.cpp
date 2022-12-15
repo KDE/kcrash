@@ -473,7 +473,11 @@ void KCrash::defaultCrashHandler(int sig)
         // The ini is required to be scoped here, as opposed to the conditional scope, so its lifetime is the same as
         // the regular data instance!
         MetadataINIWriter ini(s_metadataPath);
-        if (ini.isWritable()) {
+        // s_appFilePath can point to nullptr
+        // not exactly sure how, maybe some race condition due to KCrashDelaySetHandler ?
+        if (!s_appFilePath) {
+            fprintf(stderr, "KCrash: appFilePath points to nullptr!\n");
+        } else if (ini.isWritable()) {
             // Add the canonical exe path so the coredump daemon has more data points to map metadata to journald entry.
             ini.add("--exe", s_appFilePath.get(), MetadataWriter::BoolValue::No);
             data.setAdditionalWriter(&ini);
