@@ -28,7 +28,7 @@ generate_export_header(KF5Crash BASE_NAME KCrash)
 target_include_directories(KF5Crash INTERFACE "$<INSTALL_INTERFACE:${KDE_INSTALL_INCLUDEDIR_KF}/KCrash>")
 
 target_link_libraries(KF5Crash PUBLIC Qt${QT_MAJOR_VERSION}::Core)
-target_link_libraries(KF5Crash PRIVATE KF5::CoreAddons KF5::WindowSystem)
+target_link_libraries(KF5Crash PRIVATE Qt${QT_MAJOR_VERSION}::Gui KF5::CoreAddons)
 
 # FIXME: It is needed to work around undefined reference error on FreeBSD
 # caused by --no-undefined because the `environ' variable does not exist

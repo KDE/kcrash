@@ -33,7 +33,6 @@
 #endif
 
 #include <KAboutData>
-#include <kstartupinfo.h>
 
 #include <algorithm>
 #include <array>
@@ -544,12 +543,6 @@ void KCrash::defaultCrashHandler(int sig)
             if (about->internalProductName()) {
                 data.add("--productname", about->internalProductName());
             }
-        }
-
-        // make sure the constData() pointer remains valid when we call startProcess by making a copy
-        QByteArray startupId = KStartupInfo::startupId();
-        if (!startupId.isNull()) {
-            data.add("--startupid", startupId.constData());
         }
 
         if (s_flags & SaferDialog) {

@@ -18,7 +18,7 @@ include(KDEGitCommitHooks)
 include(ECMDeprecationSettings)
 
 set(REQUIRED_QT_VERSION 5.15.2)
-find_package(Qt${QT_MAJOR_VERSION} ${REQUIRED_QT_VERSION} CONFIG REQUIRED Core)
+find_package(Qt${QT_MAJOR_VERSION} ${REQUIRED_QT_VERSION} CONFIG REQUIRED Core Gui)
 
 if (UNIX AND NOT APPLE AND NOT ANDROID)
     option(WITH_X11 "Build with X11 integration" ON)
@@ -49,7 +49,6 @@ ecm_setup_version(PROJECT VARIABLE_PREFIX KCrash
                         SOVERSION 5)
 
 find_package(KF5CoreAddons ${KF_DEP_VERSION} REQUIRED)
-find_package(KF5WindowSystem ${KF_DEP_VERSION} REQUIRED)
 
 set(KCRASH_CORE_PATTERN_RAISE_DEFAULT ON)
 
