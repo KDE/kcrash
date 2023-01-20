@@ -12,8 +12,8 @@ deprecated: false
 release: true
 libraries:
  - qmake: KCrash
-   cmake: "KF5::Crash"
-cmakename: KF5Crash
+   cmake: "KF6::Crash"
+cmakename: KF6Crash
 
 public_lib: true
 group: Frameworks

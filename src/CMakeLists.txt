@@ -1,7 +1,7 @@
-add_library(KF5Crash)
-add_library(KF5::Crash ALIAS KF5Crash)
+add_library(KF6Crash)
+add_library(KF6::Crash ALIAS KF6Crash)
 
-target_sources(KF5Crash PRIVATE
+target_sources(KF6Crash PRIVATE
     coreconfig.cpp
     coreconfig_p.h
     kcrash.cpp
@@ -23,12 +23,12 @@ ecm_qt_export_logging_category(
     EXPORT KCRASH
 )
 
-generate_export_header(KF5Crash BASE_NAME KCrash)
+generate_export_header(KF6Crash BASE_NAME KCrash)
 
-target_include_directories(KF5Crash INTERFACE "$<INSTALL_INTERFACE:${KDE_INSTALL_INCLUDEDIR_KF}/KCrash>")
+target_include_directories(KF6Crash INTERFACE "$<INSTALL_INTERFACE:${KDE_INSTALL_INCLUDEDIR_KF}/KCrash>")
 
-target_link_libraries(KF5Crash PUBLIC Qt${QT_MAJOR_VERSION}::Core)
-target_link_libraries(KF5Crash PRIVATE Qt${QT_MAJOR_VERSION}::Gui KF5::CoreAddons)
+target_link_libraries(KF6Crash PUBLIC Qt${QT_MAJOR_VERSION}::Core)
+target_link_libraries(KF6Crash PRIVATE Qt${QT_MAJOR_VERSION}::Gui KF6::CoreAddons)
 
 # FIXME: It is needed to work around undefined reference error on FreeBSD
 # caused by --no-undefined because the `environ' variable does not exist
@@ -41,13 +41,13 @@ endif ()
 
 if(WITH_X11)
     if (QT_MAJOR_VERSION STREQUAL "5")
-      target_link_libraries(KF5Crash PRIVATE Qt5::X11Extras)
+      target_link_libraries(KF6Crash PRIVATE Qt5::X11Extras)
     endif()
 
-    target_link_libraries(KF5Crash PRIVATE X11::X11)
+    target_link_libraries(KF6Crash PRIVATE X11::X11)
 endif()
 
-set_target_properties(KF5Crash PROPERTIES VERSION   ${KCrash_VERSION}
+set_target_properties(KF6Crash PROPERTIES VERSION   ${KCrash_VERSION}
                                           SOVERSION ${KCrash_SOVERSION}
                                           EXPORT_NAME Crash
 )
@@ -59,7 +59,7 @@ ecm_generate_headers(KCrash_HEADERS
   REQUIRED_HEADERS KCrash_HEADERS
 )
 
-install(TARGETS KF5Crash EXPORT KF5CrashTargets ${KF_INSTALL_TARGETS_DEFAULT_ARGS})
+install(TARGETS KF6Crash EXPORT KF6CrashTargets ${KF_INSTALL_TARGETS_DEFAULT_ARGS})
 
 install(FILES
   ${CMAKE_CURRENT_BINARY_DIR}/kcrash_export.h
@@ -75,9 +75,9 @@ ecm_qt_install_logging_categories(
 
 if(BUILD_QCH)
     ecm_add_qch(
-        KF5Crash_QCH
+        KF6Crash_QCH
         NAME KCrash
-        BASE_NAME KF5Crash
+        BASE_NAME KF6Crash
         VERSION ${KF_VERSION}
         ORG_DOMAIN org.kde
         SOURCES # using only public headers, to cover only public API
@@ -98,5 +98,5 @@ if(BUILD_QCH)
 endif()
 
 include(ECMGeneratePriFile)
-ecm_generate_pri_file(BASE_NAME KCrash LIB_NAME KF5Crash DEPS "core" FILENAME_VAR PRI_FILENAME INCLUDE_INSTALL_DIR ${KDE_INSTALL_INCLUDEDIR_KF}/KCrash)
+ecm_generate_pri_file(BASE_NAME KCrash LIB_NAME KF6Crash DEPS "core" FILENAME_VAR PRI_FILENAME INCLUDE_INSTALL_DIR ${KDE_INSTALL_INCLUDEDIR_KF}/KCrash)
 install(FILES ${PRI_FILENAME} DESTINATION ${ECM_MKSPECS_INSTALL_DIR})

@@ -26,7 +26,7 @@ if(NOT WIN32)
     )
 
     add_executable(test_crasher test_crasher.cpp)
-    target_link_libraries(test_crasher Qt${QT_MAJOR_VERSION}::Widgets KF5::Crash)
+    target_link_libraries(test_crasher Qt${QT_MAJOR_VERSION}::Widgets KF6::Crash)
     ecm_mark_as_test(test_crasher)
     ecm_mark_nongui_executable(test_crasher)
 

@@ -45,10 +45,10 @@ add_feature_info(QCH ${BUILD_QCH} "API documentation in QCH format (for e.g. Qt 
 
 ecm_setup_version(PROJECT VARIABLE_PREFIX KCrash
                         VERSION_HEADER "${CMAKE_CURRENT_BINARY_DIR}/src/kcrash_version.h"
-                        PACKAGE_VERSION_FILE "${CMAKE_CURRENT_BINARY_DIR}/KF5CrashConfigVersion.cmake"
+                        PACKAGE_VERSION_FILE "${CMAKE_CURRENT_BINARY_DIR}/KF6CrashConfigVersion.cmake"
                         SOVERSION 5)
 
-find_package(KF5CoreAddons ${KF_DEP_VERSION} REQUIRED)
+find_package(KF6CoreAddons ${KF_DEP_VERSION} REQUIRED)
 
 set(KCRASH_CORE_PATTERN_RAISE_DEFAULT ON)
 
@@ -70,34 +70,34 @@ if (BUILD_TESTING)
 endif()
 
 # create a Config.cmake and a ConfigVersion.cmake file and install them
-set(CMAKECONFIG_INSTALL_DIR "${KDE_INSTALL_CMAKEPACKAGEDIR}/KF5Crash")
+set(CMAKECONFIG_INSTALL_DIR "${KDE_INSTALL_CMAKEPACKAGEDIR}/KF6Crash")
 
 if (BUILD_QCH)
     ecm_install_qch_export(
-        TARGETS KF5Crash_QCH
-        FILE KF5CrashQchTargets.cmake
+        TARGETS KF6Crash_QCH
+        FILE KF6CrashQchTargets.cmake
         DESTINATION "${CMAKECONFIG_INSTALL_DIR}"
         COMPONENT Devel
     )
-    set(PACKAGE_INCLUDE_QCHTARGETS "include(\"\${CMAKE_CURRENT_LIST_DIR}/KF5CrashQchTargets.cmake\")")
+    set(PACKAGE_INCLUDE_QCHTARGETS "include(\"\${CMAKE_CURRENT_LIST_DIR}/KF6CrashQchTargets.cmake\")")
 endif()
 
 include(CMakePackageConfigHelpers)
 
 configure_package_config_file(
-  "${CMAKE_CURRENT_SOURCE_DIR}/KF5CrashConfig.cmake.in"
-  "${CMAKE_CURRENT_BINARY_DIR}/KF5CrashConfig.cmake"
+  "${CMAKE_CURRENT_SOURCE_DIR}/KF6CrashConfig.cmake.in"
+  "${CMAKE_CURRENT_BINARY_DIR}/KF6CrashConfig.cmake"
   INSTALL_DESTINATION  ${CMAKECONFIG_INSTALL_DIR}
 )
 
 install(FILES
-  "${CMAKE_CURRENT_BINARY_DIR}/KF5CrashConfig.cmake"
-  "${CMAKE_CURRENT_BINARY_DIR}/KF5CrashConfigVersion.cmake"
+  "${CMAKE_CURRENT_BINARY_DIR}/KF6CrashConfig.cmake"
+  "${CMAKE_CURRENT_BINARY_DIR}/KF6CrashConfigVersion.cmake"
   DESTINATION "${CMAKECONFIG_INSTALL_DIR}"
   COMPONENT Devel
 )
 
-install(EXPORT KF5CrashTargets DESTINATION "${CMAKECONFIG_INSTALL_DIR}" FILE KF5CrashTargets.cmake NAMESPACE KF5:: )
+install(EXPORT KF6CrashTargets DESTINATION "${CMAKECONFIG_INSTALL_DIR}" FILE KF6CrashTargets.cmake NAMESPACE KF6:: )
 
 install(FILES
    ${CMAKE_CURRENT_BINARY_DIR}/src/kcrash_version.h
