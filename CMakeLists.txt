@@ -46,7 +46,7 @@ add_feature_info(QCH ${BUILD_QCH} "API documentation in QCH format (for e.g. Qt 
 ecm_setup_version(PROJECT VARIABLE_PREFIX KCrash
                         VERSION_HEADER "${CMAKE_CURRENT_BINARY_DIR}/src/kcrash_version.h"
                         PACKAGE_VERSION_FILE "${CMAKE_CURRENT_BINARY_DIR}/KF6CrashConfigVersion.cmake"
-                        SOVERSION 5)
+                        SOVERSION 6)
 
 find_package(KF6CoreAddons ${KF_DEP_VERSION} REQUIRED)
 
