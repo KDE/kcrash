@@ -27,8 +27,8 @@ generate_export_header(KF6Crash BASE_NAME KCrash)
 
 target_include_directories(KF6Crash INTERFACE "$<INSTALL_INTERFACE:${KDE_INSTALL_INCLUDEDIR_KF}/KCrash>")
 
-target_link_libraries(KF6Crash PUBLIC Qt${QT_MAJOR_VERSION}::Core)
-target_link_libraries(KF6Crash PRIVATE Qt${QT_MAJOR_VERSION}::Gui KF6::CoreAddons)
+target_link_libraries(KF6Crash PUBLIC Qt6::Core)
+target_link_libraries(KF6Crash PRIVATE Qt6::Gui KF6::CoreAddons)
 
 # FIXME: It is needed to work around undefined reference error on FreeBSD
 # caused by --no-undefined because the `environ' variable does not exist
@@ -40,10 +40,6 @@ if (CMAKE_SYSTEM_NAME MATCHES "FreeBSD")
 endif ()
 
 if(WITH_X11)
-    if (QT_MAJOR_VERSION STREQUAL "5")
-      target_link_libraries(KF6Crash PRIVATE Qt5::X11Extras)
-    endif()
-
     target_link_libraries(KF6Crash PRIVATE X11::X11)
 endif()
 
@@ -84,7 +80,7 @@ if(BUILD_QCH)
             ${KCrash_HEADERS}
         MD_MAINPAGE "${CMAKE_SOURCE_DIR}/README.md"
         LINK_QCHS
-            Qt5Core_QCH
+            Qt6Core_QCH
         INCLUDE_DIRS
             ${CMAKE_CURRENT_BINARY_DIR}
         BLANK_MACROS
