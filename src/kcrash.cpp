@@ -181,7 +181,7 @@ static QStringList libexecPaths()
     static QStringList list = QFile::decodeName(qgetenv("LIBEXEC_PATH")).split(QLatin1Char(':'), Qt::SkipEmptyParts) // env var is used first
         + QStringList{
             QCoreApplication::applicationDirPath(), // then look where our application binary is located
-            QLibraryInfo::location(QLibraryInfo::LibraryExecutablesPath), // look where libexec path is (can be set in qt.conf)
+            QLibraryInfo::path(QLibraryInfo::LibraryExecutablesPath), // look where libexec path is (can be set in qt.conf)
             QFile::decodeName(KDE_INSTALL_FULL_LIBEXECDIR) // look at our installation location
         };
     return list;
