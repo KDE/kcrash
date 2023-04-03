@@ -40,8 +40,9 @@ include(ECMQtDeclareLoggingCategory)
 option(BUILD_QCH "Build API documentation in QCH format (for e.g. Qt Assistant, Qt Creator & KDevelop)" OFF)
 add_feature_info(QCH ${BUILD_QCH} "API documentation in QCH format (for e.g. Qt Assistant, Qt Creator & KDevelop)")
 
+set(kcrash_version_header "${CMAKE_CURRENT_BINARY_DIR}/src/kcrash_version.h")
 ecm_setup_version(PROJECT VARIABLE_PREFIX KCrash
-                        VERSION_HEADER "${CMAKE_CURRENT_BINARY_DIR}/src/kcrash_version.h"
+                        VERSION_HEADER "${kcrash_version_header}"
                         PACKAGE_VERSION_FILE "${CMAKE_CURRENT_BINARY_DIR}/KF6CrashConfigVersion.cmake"
                         SOVERSION 6)
 
@@ -97,7 +98,7 @@ install(FILES
 install(EXPORT KF6CrashTargets DESTINATION "${CMAKECONFIG_INSTALL_DIR}" FILE KF6CrashTargets.cmake NAMESPACE KF6:: )
 
 install(FILES
-   ${CMAKE_CURRENT_BINARY_DIR}/src/kcrash_version.h
+   ${kcrash_version_header}
   DESTINATION ${KDE_INSTALL_INCLUDEDIR_KF}/KCrash COMPONENT Devel
 )
 
