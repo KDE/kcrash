@@ -29,7 +29,13 @@ ecm_qt_export_logging_category(
     EXPORT KCRASH
 )
 
-generate_export_header(KF6Crash BASE_NAME KCrash)
+ecm_generate_export_header(KF6Crash
+    BASE_NAME KCrash
+    GROUP_BASE_NAME KF
+    VERSION ${KF_VERSION}
+    USE_VERSION_HEADER
+    DEPRECATED_BASE_VERSION 0
+)
 
 target_include_directories(KF6Crash INTERFACE "$<INSTALL_INTERFACE:${KDE_INSTALL_INCLUDEDIR_KF}/KCrash>")
 
