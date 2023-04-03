@@ -1,6 +1,12 @@
 add_library(KF6Crash)
 add_library(KF6::Crash ALIAS KF6Crash)
 
+set_target_properties(KF6Crash PROPERTIES
+    VERSION     ${KCrash_VERSION}
+    SOVERSION   ${KCrash_SOVERSION}
+    EXPORT_NAME Crash
+)
+
 target_sources(KF6Crash PRIVATE
     coreconfig.cpp
     coreconfig_p.h
@@ -42,11 +48,6 @@ endif ()
 if(WITH_X11)
     target_link_libraries(KF6Crash PRIVATE X11::X11)
 endif()
-
-set_target_properties(KF6Crash PROPERTIES VERSION   ${KCrash_VERSION}
-                                          SOVERSION ${KCrash_SOVERSION}
-                                          EXPORT_NAME Crash
-)
 
 ecm_generate_headers(KCrash_HEADERS
   HEADER_NAMES
