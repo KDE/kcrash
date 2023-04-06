@@ -41,7 +41,7 @@ option(BUILD_QCH "Build API documentation in QCH format (for e.g. Qt Assistant, 
 add_feature_info(QCH ${BUILD_QCH} "API documentation in QCH format (for e.g. Qt Assistant, Qt Creator & KDevelop)")
 
 set(kcrash_version_header "${CMAKE_CURRENT_BINARY_DIR}/src/kcrash_version.h")
-ecm_setup_version(PROJECT VARIABLE_PREFIX KCrash
+ecm_setup_version(PROJECT VARIABLE_PREFIX KCRASH
                         VERSION_HEADER "${kcrash_version_header}"
                         PACKAGE_VERSION_FILE "${CMAKE_CURRENT_BINARY_DIR}/KF6CrashConfigVersion.cmake"
                         SOVERSION 6)

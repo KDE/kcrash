@@ -2,8 +2,8 @@ add_library(KF6Crash)
 add_library(KF6::Crash ALIAS KF6Crash)
 
 set_target_properties(KF6Crash PROPERTIES
-    VERSION     ${KCrash_VERSION}
-    SOVERSION   ${KCrash_SOVERSION}
+    VERSION     ${KCRASH_VERSION}
+    SOVERSION   ${KCRASH_SOVERSION}
     EXPORT_NAME Crash
 )
 
