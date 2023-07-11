@@ -351,7 +351,12 @@ void KCrash::setDrKonqiEnabled(bool enabled)
     }
     s_launchDrKonqi = launchDrKonqi;
     if (s_launchDrKonqi && !s_drkonqiPath) {
-        const QString exec = QStandardPaths::findExecutable(QStringLiteral("drkonqi"), libexecPaths());
+#ifdef Q_OS_WINDOWS
+        static const QString drkonqi = QStringLiteral("drkonqi.exe");
+#else
+        static const QString drkonqi = QStringLiteral("drkonqi");
+#endif
+        const QString exec = QStandardPaths::findExecutable(drkonqi, libexecPaths());
         if (exec.isEmpty()) {
             qCDebug(LOG_KCRASH) << "Could not find drkonqi in search paths:" << libexecPaths();
             s_launchDrKonqi = 0;
