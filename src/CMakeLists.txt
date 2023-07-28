@@ -21,7 +21,9 @@ configure_file(
     ${CMAKE_CURRENT_BINARY_DIR}/config-kcrash.h
 )
 
-ecm_qt_export_logging_category(
+ecm_qt_declare_logging_category(
+    KF6Crash
+    HEADER kcrash_debug.h
     IDENTIFIER LOG_KCRASH
     CATEGORY_NAME kf.crash
     OLD_CATEGORY_NAMES org.kde.kcrash
