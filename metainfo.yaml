@@ -1,4 +1,4 @@
-maintainer: dfaure
+maintainer:
 description: Support for application crash analysis and bug report from apps
 tier: 2
 type: integration
