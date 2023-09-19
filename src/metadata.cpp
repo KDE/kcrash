@@ -20,7 +20,6 @@ namespace KCrash
 {
 #ifdef Q_OS_LINUX
 MetadataINIWriter::MetadataINIWriter(const QByteArray &path)
-    : MetadataWriter()
 {
     if (path.isEmpty()) {
         return;
