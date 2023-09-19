@@ -4,6 +4,9 @@ set(KF_VERSION "5.246.0") # handled by release scripts
 set(KF_DEP_VERSION "5.246.0") # handled by release scripts
 project(KCrash VERSION ${KF_VERSION})
 
+set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
 include(FeatureSummary)
 find_package(ECM 5.240.0  NO_MODULE)
 set_package_properties(ECM PROPERTIES TYPE REQUIRED DESCRIPTION "Extra CMake Modules." URL "https://commits.kde.org/extra-cmake-modules")

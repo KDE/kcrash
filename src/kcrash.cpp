@@ -153,6 +153,20 @@ QString glRenderer()
     return QString::fromUtf8(reinterpret_cast<const char *>(context.functions()->glGetString(GL_RENDERER)));
 }
 
+QString bootId()
+{
+#ifdef Q_OS_LINUX
+    QFile file(QStringLiteral("/proc/sys/kernel/random/boot_id"));
+    if (!file.open(QFile::ReadOnly)) {
+        qCWarning(LOG_KCRASH) << "Failed to read /proc/sys/kernel/random/boot_id" << file.errorString();
+        return {};
+    }
+    return QString::fromUtf8(file.readAll().simplified().replace('-', QByteArrayView()));
+#else
+    return {};
+#endif
+}
+
 } // namespace
 
 static QStringList libexecPaths()
@@ -232,9 +246,14 @@ void KCrash::initialize()
     if (shouldWriteMetadataToDisk()) {
         // We do not actively clean up metadata via KCrash but some other service. This potentially means we litter
         // a lot -> put the metadata in a subdir.
+        // This data is consumed by DrKonqi in combination with coredumpd metadata.
         const QString metadataDir = QStandardPaths::writableLocation(QStandardPaths::GenericCacheLocation) + QStringLiteral("/kcrash-metadata");
         if (QDir().mkpath(metadataDir)) {
-            s_metadataPath = QFile::encodeName(metadataDir + QStringLiteral("/%1.ini").arg(QCoreApplication::applicationPid()));
+            const auto bootId = ::bootId();
+            const auto exe = QString::fromUtf8(s_appName.get());
+            const auto pid = QString::number(QCoreApplication::applicationPid());
+            s_metadataPath = QFile::encodeName(metadataDir + //
+                                               QStringLiteral("/%1.%2.%3.ini").arg(exe, bootId, pid));
         }
         if (!s_crashHandler) {
             // Always enable the default handler. We cannot create the metadata ahead of time since we do not know
