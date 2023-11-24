@@ -208,16 +208,24 @@ void KCrash::initialize()
     if (s_launchDrKonqi == 0) { // disabled by the program itself
         return;
     }
+
+    s_coreConfig(); // Initialize.
+
+    bool enableDrKonqi = !qEnvironmentVariableIsSet("KDE_DEBUG");
+    if (qEnvironmentVariableIsSet("KCRASH_AUTO_RESTARTED") || qEnvironmentVariableIntValue("RUNNING_UNDER_RR") == 1
+        || qEnvironmentVariableIntValue("KCRASH_DUMP_ONLY") == 1) {
+        enableDrKonqi = false;
+    }
+
     const QStringList args = QCoreApplication::arguments();
-    if (!qEnvironmentVariableIsSet("KDE_DEBUG") //
-        && !qEnvironmentVariableIsSet("KCRASH_AUTO_RESTARTED") //
-        && !qEnvironmentVariableIntValue("RUNNING_UNDER_RR") //
-        && qEnvironmentVariableIntValue("KCRASH_DUMP_ONLY") == 0) {
-        // enable drkonqi
+    // Default to core dumping whenever a process is set. When not or when explicitly opting into just in time debugging
+    // we enable drkonqi. This causes the signal handler to directly fork drkonqi opening us to race conditions.
+    // NOTE: depending on the specific signal other threads are running while the signal handler runs and may trip over
+    //   the signal handler's closed FDs. That is primarily why we do not like JIT debugging.
+    if (enableDrKonqi && (!s_coreConfig->isProcess() || qEnvironmentVariableIntValue("KCRASH_JIT_DRKONQI") == 1)) {
         KCrash::setDrKonqiEnabled(true);
     } else {
-        // This loads qtlogging.ini very early which prevents unittests from doing QStandardPaths::setTestModeEnabled(true) in initTestCase()
-        // qCDebug(LOG_KCRASH) << "KCrash disabled through environment.";
+        // Don't qDebug here, it loads qtlogging.ini very early which prevents unittests from doing QStandardPaths::setTestModeEnabled(true) in initTestCase()
     }
 
     if (QCoreApplication::instance()) {
@@ -251,8 +259,6 @@ void KCrash::initialize()
             setCrashHandler(defaultCrashHandler);
         }
     } // empty s_metadataPath disables writing
-
-    s_coreConfig(); // Initialize.
 }
 
 void KCrash::setEmergencySaveFunction(HandlerType saveFunction)
