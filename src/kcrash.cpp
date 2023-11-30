@@ -55,21 +55,6 @@
 #include "coreconfig_p.h"
 #include "metadata_p.h"
 
-// Copy from klauncher_cmds
-typedef struct {
-    long cmd;
-    long arg_length;
-} kcrash_launcher_header;
-
-#define LAUNCHER_OK 4
-#define LAUNCHER_EXEC_NEW 12
-
-namespace KCrash
-{
-KCRASH_EXPORT bool loadedByKdeinit = false;
-void setApplicationFilePath(const QString &filePath);
-// Create socket path to transfer ptrace scope and open connection
-}
 #ifdef Q_OS_LINUX
 static QByteArray s_socketpath;
 #endif
@@ -505,10 +490,6 @@ void KCrash::defaultCrashHandler(int sig)
 #endif
 
         data.add("--appname", s_appName ? s_appName.get() : "<unknown>");
-
-        if (loadedByKdeinit) {
-            data.addBool("--kdeinit");
-        }
 
         // only add apppath if it's not NULL
         if (s_appPath && s_appPath[0]) {
