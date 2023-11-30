@@ -38,6 +38,7 @@
 
 #include <algorithm>
 #include <array>
+#include <chrono>
 #include <memory>
 
 #include <QDebug>
@@ -54,6 +55,8 @@
 
 #include "coreconfig_p.h"
 #include "metadata_p.h"
+
+using namespace std::chrono_literals;
 
 #ifdef Q_OS_LINUX
 static QByteArray s_socketpath;
@@ -277,7 +280,7 @@ class KCrashDelaySetHandler : public QObject
 public:
     KCrashDelaySetHandler()
     {
-        startTimer(10000); // 10 s
+        startTimer(10s);
     }
 
 protected:
