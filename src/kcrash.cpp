@@ -547,21 +547,7 @@ void KCrash::defaultCrashHandler(int sig)
         const int argc = data.argc;
         const char **argv = data.argv.data();
 
-#ifndef NDEBUG
-        fprintf(stderr, "KCrash: crashing... crashRecursionCounter = %d\n", crashRecursionCounter);
-        fprintf(stderr,
-                "KCrash: Application Name = %s path = %s pid = %lld\n",
-                s_appName ? s_appName.get() : "<unknown>",
-                s_appPath ? s_appPath.get() : "<unknown>",
-                QCoreApplication::applicationPid());
-        fprintf(stderr, "KCrash: Arguments: ");
-        for (int i = 0; i < s_autoRestartCommandLine.argc; ++i) {
-            fprintf(stderr, "%s ", s_autoRestartCommandLine.argv[i]);
-        }
-        fprintf(stderr, "\n");
-#else
-        fprintf(stderr, "KCrash: Application '%s' crashing...\n", s_appName ? s_appName.get() : "<unknown>");
-#endif
+        fprintf(stderr, "KCrash: Application '%s' crashing... crashRecursionCounter = %d\n", s_appName ? s_appName.get() : "<unknown>", crashRecursionCounter);
 
         if (s_launchDrKonqi != 1) {
             setCrashHandler(nullptr);
@@ -589,6 +575,19 @@ void KCrash::defaultCrashHandler(int sig)
             close(ConnectionNumber(display));
         }
 #endif
+#endif
+
+#ifndef NDEBUG
+        fprintf(stderr,
+                "KCrash: Application Name = %s path = %s pid = %lld\n",
+                s_appName ? s_appName.get() : "<unknown>",
+                s_appPath ? s_appPath.get() : "<unknown>",
+                QCoreApplication::applicationPid());
+        fprintf(stderr, "KCrash: Arguments: ");
+        for (int i = 0; i < s_autoRestartCommandLine.argc; ++i) {
+            fprintf(stderr, "%s ", s_autoRestartCommandLine.argv[i]);
+        }
+        fprintf(stderr, "\n");
 #endif
 
         startProcess(argc, argv, true);
