@@ -311,7 +311,7 @@ void KCrash::setFlags(KCrash::CrashFlags flags)
 
 void KCrash::setApplicationFilePath(const QString &filePath)
 {
-    const int pos = filePath.lastIndexOf(QLatin1Char('/'));
+    const auto pos = filePath.lastIndexOf(QLatin1Char('/'));
     const QString appName = filePath.mid(pos + 1);
     const QString appPath = filePath.left(pos); // could be empty, in theory
 
