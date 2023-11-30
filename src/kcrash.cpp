@@ -16,10 +16,10 @@
 
 #include <config-kcrash.h>
 
-#include <signal.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
+#include <csignal>
+#include <cstdio>
+#include <cstdlib>
+#include <cstring>
 
 #include <qplatformdefs.h>
 #ifndef Q_OS_WIN
