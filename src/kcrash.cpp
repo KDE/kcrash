@@ -563,6 +563,14 @@ void KCrash::defaultCrashHandler(int sig)
         fprintf(stderr, "KCrash: Application '%s' crashing...\n", s_appName ? s_appName.get() : "<unknown>");
 #endif
 
+        if (s_launchDrKonqi != 1) {
+            setCrashHandler(nullptr);
+#if !defined(Q_OS_WIN)
+            raise(sig); // dump core, or whatever is the default action for this signal.
+#endif
+            return;
+        }
+
 #if !defined(Q_OS_WIN) && !defined(Q_OS_OSX)
         if (!(s_flags & KeepFDs)) {
             // This tries to prevent problems where applications fail to release resources that drkonqi might need.
@@ -582,14 +590,6 @@ void KCrash::defaultCrashHandler(int sig)
         }
 #endif
 #endif
-
-        if (s_launchDrKonqi != 1) {
-            setCrashHandler(nullptr);
-#if !defined(Q_OS_WIN)
-            raise(sig); // dump core, or whatever is the default action for this signal.
-#endif
-            return;
-        }
 
         startProcess(argc, argv, true);
     }
