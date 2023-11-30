@@ -60,10 +60,12 @@ static QByteArray s_socketpath;
 #endif
 
 struct Args {
+    Args() = default;
     ~Args()
     {
         clear();
     }
+    Q_DISABLE_COPY_MOVE(Args)
 
     void clear()
     {
