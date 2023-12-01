@@ -26,6 +26,8 @@ int main(int argc, char **argv)
 {
     QApplication app(argc, argv);
 
+    KCrash::initialize();
+
     const QStringList args = app.arguments();
     QByteArray flag = args.count() > 1 ? args.at(1).toLatin1() : QByteArray();
 
