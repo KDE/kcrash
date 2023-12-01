@@ -73,7 +73,7 @@ public:
     // Also closes the backing writer.
     void close() override;
 
-    std::array<const char *, 31> argv{};
+    std::array<const char *, 32> argv{};
     std::size_t argc = 0;
 
 private:

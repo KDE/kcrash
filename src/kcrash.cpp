@@ -46,6 +46,9 @@
 #include <QFile>
 #include <QGuiApplication>
 #include <QLibraryInfo>
+#include <QOffscreenSurface>
+#include <QOpenGLContext>
+#include <QOpenGLFunctions>
 #include <QStandardPaths>
 #include <QThread>
 
@@ -119,6 +122,33 @@ static QByteArray s_metadataPath;
 
 static std::unique_ptr<char[]> s_kcrashErrorMessage;
 Q_GLOBAL_STATIC(KCrash::CoreConfig, s_coreConfig)
+
+namespace
+{
+
+std::unique_ptr<char[]> s_glRenderer; // the GL_RENDERER
+
+QString glRenderer()
+{
+    QOpenGLContext context;
+    QOffscreenSurface surface;
+    surface.create();
+
+    if (!context.create()) {
+        return {};
+    }
+
+    if (!context.makeCurrent(&surface)) {
+        return {};
+    }
+
+    auto done = qScopeGuard([&context] {
+        context.doneCurrent();
+    });
+    return QString::fromUtf8(reinterpret_cast<const char *>(context.functions()->glGetString(GL_RENDERER)));
+}
+
+} // namespace
 
 static void kcrashInitialize()
 {
@@ -222,6 +252,9 @@ void KCrash::initialize()
         const QString path = QCoreApplication::applicationFilePath();
         s_appFilePath.reset(qstrdup(qPrintable(path))); // This intentionally cannot be changed by the application!
         KCrash::setApplicationFilePath(path);
+        if (auto guiApp = qobject_cast<QGuiApplication *>(QCoreApplication::instance())) {
+            s_glRenderer.reset(qstrdup(glRenderer().toUtf8().constData()));
+        }
     } else {
         qWarning() << "This process needs a QCoreApplication instance in order to use KCrash";
     }
@@ -475,6 +508,10 @@ void KCrash::defaultCrashHandler(int sig)
             data.setAdditionalWriter(&ini);
         }
 #endif
+
+        if (s_glRenderer) {
+            data.add("--glrenderer", s_glRenderer.get());
+        }
 
         const QByteArray platformName = QGuiApplication::platformName().toUtf8();
         if (!platformName.isEmpty()) {
