@@ -59,6 +59,11 @@
 #include "coreconfig_p.h"
 #include "metadata_p.h"
 
+// WARNING: do not use qGlobalStatics in here, they get destroyed too early on
+// shutdown and may inhibit crash handling in late-exit scenarios (e.g. when
+// a function local static gets destroyed by __cxa_finalize)
+#undef Q_GLOBAL_STATIC
+
 using namespace std::chrono_literals;
 
 #ifdef Q_OS_LINUX
@@ -121,10 +126,10 @@ static int s_originalSignal = -1;
 static QByteArray s_metadataPath;
 
 static std::unique_ptr<char[]> s_kcrashErrorMessage;
-Q_GLOBAL_STATIC(KCrash::CoreConfig, s_coreConfig)
 
 namespace
 {
+const KCrash::CoreConfig s_coreConfig;
 
 std::unique_ptr<char[]> s_glRenderer; // the GL_RENDERER
 
@@ -179,7 +184,7 @@ static bool shouldWriteMetadataToDisk()
     // the daemon may already be gone but we'll still want to deal with the crash on next login!
     // Similar reasoning applies to not checking the presence of the launcher socket.
     const bool drkonqiCoredumpHelper = !QStandardPaths::findExecutable(QStringLiteral("drkonqi-coredump-processor"), libexecPaths()).isEmpty();
-    return s_coreConfig()->isCoredumpd() && drkonqiCoredumpHelper && !qEnvironmentVariableIsSet("KCRASH_NO_METADATA");
+    return s_coreConfig.isCoredumpd() && drkonqiCoredumpHelper && !qEnvironmentVariableIsSet("KCRASH_NO_METADATA");
 #else
     return false;
 #endif
@@ -190,8 +195,6 @@ void KCrash::initialize()
     if (s_launchDrKonqi == 0) { // disabled by the program itself
         return;
     }
-
-    s_coreConfig(); // Initialize.
 
     bool enableDrKonqi = !qEnvironmentVariableIsSet("KDE_DEBUG");
     if (qEnvironmentVariableIsSet("KCRASH_AUTO_RESTARTED") || qEnvironmentVariableIntValue("RUNNING_UNDER_RR") == 1
@@ -204,7 +207,7 @@ void KCrash::initialize()
     // we enable drkonqi. This causes the signal handler to directly fork drkonqi opening us to race conditions.
     // NOTE: depending on the specific signal other threads are running while the signal handler runs and may trip over
     //   the signal handler's closed FDs. That is primarily why we do not like JIT debugging.
-    if (enableDrKonqi && (!s_coreConfig->isProcess() || qEnvironmentVariableIntValue("KCRASH_JIT_DRKONQI") == 1)) {
+    if (enableDrKonqi && (!s_coreConfig.isProcess() || qEnvironmentVariableIntValue("KCRASH_JIT_DRKONQI") == 1)) {
         KCrash::setDrKonqiEnabled(true);
     } else {
         // Don't qDebug here, it loads qtlogging.ini very early which prevents unittests from doing QStandardPaths::setTestModeEnabled(true) in initTestCase()
@@ -596,7 +599,7 @@ void KCrash::defaultCrashHandler(int sig)
         fprintf(stderr, "Unable to start Dr. Konqi\n");
     }
 
-    if (s_coreConfig->isProcess()) {
+    if (s_coreConfig.isProcess()) {
         fprintf(stderr, "Re-raising signal for core dump handling.\n");
         KCrash::setCrashHandler(nullptr);
         raise(sig);
@@ -702,7 +705,7 @@ void KCrash::startProcess(int argc, const char *argv[], bool waitAndExit)
             // If the process was started directly, use waitpid(), as it's a child...
             while (waitpid(pid, nullptr, 0) != pid) { }
         }
-        if (!s_coreConfig->isProcess()) {
+        if (!s_coreConfig.isProcess()) {
             // Only exit if we don't forward to core dumps
             _exit(253);
         }
