@@ -24,14 +24,14 @@ private Q_SLOTS:
         MetadataINIWriter iniWriter(iniFile.toLocal8Bit());
         data.setAdditionalWriter(&iniWriter);
 #endif
-        data.add("--ABC", "FOO");
+        data.add("--ABC", "FOO\nBAR");
         data.addBool("--Meow");
         data.close();
         const int argc = data.argc;
         QCOMPARE(argc, 4);
         QCOMPARE(data.argv.at(0), QStringLiteral("BEFEHL")); // make sure we do stringy comparison
         QCOMPARE(data.argv.at(1), QStringLiteral("--ABC"));
-        QCOMPARE(data.argv.at(2), QStringLiteral("FOO"));
+        QCOMPARE(data.argv.at(2), QStringLiteral("FOO\nBAR"));
         QCOMPARE(data.argv.at(3), QStringLiteral("--Meow"));
         QCOMPARE(data.argv.at(4), nullptr); // list should be null terminated
 
@@ -40,7 +40,7 @@ private Q_SLOTS:
         QFile ini(iniFile);
         QVERIFY(ini.open(QFile::ReadOnly));
         QCOMPARE(ini.readLine(), "[KCrash]\n");
-        QCOMPARE(ini.readLine(), "ABC=FOO\n");
+        QCOMPARE(ini.readLine(), "ABC=FOO\\nBAR\n");
         QCOMPARE(ini.readLine(), "Meow=true\n");
         QVERIFY(ini.atEnd()); // nothing after final newline
 #endif

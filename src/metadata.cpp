@@ -11,6 +11,7 @@
 #ifdef Q_OS_LINUX
 #include <cstring>
 #include <fcntl.h>
+#include <span>
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <unistd.h>
@@ -25,6 +26,7 @@ MetadataINIWriter::MetadataINIWriter(const QByteArray &path)
         return;
     }
 
+    // TODO: this should be blocking surely
     fd = ::open(path.constData(), O_WRONLY | O_CREAT | O_NONBLOCK | O_TRUNC | O_CLOEXEC, S_IRUSR | S_IWUSR);
     if (fd == -1) {
         fprintf(stderr, "Failed to open metadata file: %s\n", strerror(errno));
@@ -56,16 +58,24 @@ void MetadataINIWriter::add(const char *key, const char *value, BoolValue boolVa
     if (fd < 0) {
         return;
     }
-    const int ret = snprintf(iniLine.data(), iniLine.max_size(), "%s=%s\n", key + 2 /** skip the leading -- */, value);
-    if (ret < 0) {
-        fprintf(stderr, "Failed to generate metadata line for '%s', '%s'\n", key, value);
-        return;
+
+    const auto valueSpan = std::span{value, strlen(value)};
+
+    write(fd, key + 2, strlen(key + 2));
+    write(fd, "=", 1);
+    if (strstr(value, "\n")) { // if it contains \n then write literally \n (2 characters)
+        // Could appear in the exception what() string. KConfig knows what to do with this.
+        for (const auto &character : valueSpan) {
+            if (character == '\n') {
+                write(fd, "\\n", 2);
+            } else {
+                write(fd, &character, 1);
+            }
+        }
+    } else { // fast write entire string in one go since it contains no newlines
+        write(fd, valueSpan.data(), valueSpan.size());
     }
-    // Cannot be negative anymore.
-    const std::make_unsigned<decltype(ret)>::type lineLength = ret;
-    fprintf(stderr, "%d -- %s", lineLength, iniLine.data());
-    Q_ASSERT(lineLength <= iniLine.max_size()); // is not truncated41
-    write(fd, iniLine.data(), lineLength);
+    write(fd, "\n", 1);
 }
 
 bool MetadataINIWriter::isWritable() const

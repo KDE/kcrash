@@ -49,7 +49,6 @@ public:
 private:
     bool writable = false;
     int fd = -1;
-    std::array<char, 1024> iniLine{}; // arbitrary max size
 
     Q_DISABLE_COPY_MOVE(MetadataINIWriter)
 };
@@ -73,7 +72,7 @@ public:
     // Also closes the backing writer.
     void close() override;
 
-    std::array<const char *, 32> argv{};
+    std::array<const char *, 34> argv{};
     std::size_t argc = 0;
 
 private:

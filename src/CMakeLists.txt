@@ -14,7 +14,10 @@ target_sources(KF6Crash PRIVATE
     kcrash.h
     metadata.cpp
     metadata_p.h
+    exception.cpp
 )
+
+kde_source_files_enable_exceptions(exception.cpp)
 
 configure_file(
     ${CMAKE_CURRENT_SOURCE_DIR}/config-kcrash.h.cmake

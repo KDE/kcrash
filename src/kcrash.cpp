@@ -57,6 +57,7 @@
 #endif
 
 #include "coreconfig_p.h"
+#include "exception_p.h"
 #include "metadata_p.h"
 
 // WARNING: do not use qGlobalStatics in here, they get destroyed too early on
@@ -492,6 +493,15 @@ void KCrash::defaultCrashHandler(int sig)
             data.setAdditionalWriter(&ini);
         }
 #endif
+
+        if (auto optionalExceptionMetadata = KCrash::exceptionMetadata(); optionalExceptionMetadata.has_value()) {
+            if (optionalExceptionMetadata->klass) {
+                data.add("--exceptionname", optionalExceptionMetadata->klass);
+            }
+            if (optionalExceptionMetadata->what) {
+                data.add("--exceptionwhat", optionalExceptionMetadata->what);
+            }
+        }
 
         if (s_glRenderer) {
             data.add("--glrenderer", s_glRenderer.get());
