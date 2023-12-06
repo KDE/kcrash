@@ -26,8 +26,7 @@ MetadataINIWriter::MetadataINIWriter(const QByteArray &path)
         return;
     }
 
-    // TODO: this should be blocking surely
-    fd = ::open(path.constData(), O_WRONLY | O_CREAT | O_NONBLOCK | O_TRUNC | O_CLOEXEC, S_IRUSR | S_IWUSR);
+    fd = ::open(path.constData(), O_WRONLY | O_CREAT | O_TRUNC | O_CLOEXEC, S_IRUSR | S_IWUSR);
     if (fd == -1) {
         fprintf(stderr, "Failed to open metadata file: %s\n", strerror(errno));
     } else if (fd >= 0) {
