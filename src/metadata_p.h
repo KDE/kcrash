@@ -72,6 +72,10 @@ public:
     // Also closes the backing writer.
     void close() override;
 
+    // WARNING: DO NOT FORGET TO BUMP AND SHRINK THIS HERE VALUE
+    // - boolean values increase the argv by 1 slot
+    // - non-boolean values increase the argv by 2 slots
+    // - this should always be the maximum of used slots
     std::array<const char *, 34> argv{};
     std::size_t argc = 0;
 
