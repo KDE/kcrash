@@ -127,6 +127,24 @@ namespace
 {
 const KCrash::CoreConfig s_coreConfig;
 
+#if defined(SIGSTKSZ)
+#if defined(__SANITIZE_ADDRESS__) || __has_feature(address_sanitizer)
+// NOTE: SIGSTKSZ can easily be too small when using ASAN. Give us a spacious stack instead!
+const size_t s_stackSize = 32768L /* 32KiB */;
+#else
+// Our real stack requirement is somewhere above 1024 (that's the largest array we have).
+const size_t s_stackSize = std::max<size_t>(SIGSTKSZ, 4096);
+#endif
+const stack_t s_handlerStack{
+    .ss_sp = malloc(s_stackSize),
+    .ss_flags = 0,
+    .ss_size = s_stackSize,
+};
+const auto s_handlerStackCleanup = qScopeGuard([] {
+    free(s_handlerStack.ss_sp);
+});
+#endif
+
 std::unique_ptr<char[]> s_glRenderer; // the GL_RENDERER
 std::unique_ptr<char[]> s_qtVersion;
 
@@ -383,7 +401,18 @@ void KCrash::setCrashHandler(HandlerType handler)
         s_previousExceptionFilter = NULL;
     }
 #else
-    if (!handler) {
+    if (handler) {
+#if defined(SIGSTKSZ)
+        if (s_handlerStack.ss_sp) {
+            if (sigaltstack(&s_handlerStack, nullptr) == -1) {
+                const auto err = errno;
+                qCWarning(LOG_KCRASH) << "Failed to install signal stack:" << strerror(err);
+            }
+        } else {
+            qCWarning(LOG_KCRASH) << "Couldn't allocate handler stack. Using regular stack instead.";
+        }
+#endif
+    } else {
         handler = SIG_DFL;
     }
 
@@ -412,9 +441,12 @@ void KCrash::setCrashHandler(HandlerType handler)
         struct sigaction action {
         };
         action.sa_handler = handler;
-        action.sa_flags = SA_RESTART;
+        action.sa_flags = SA_RESTART | SA_ONSTACK;
         sigemptyset(&action.sa_mask);
-        sigaction(signal, &action, nullptr);
+        if (sigaction(signal, &action, nullptr) == -1) {
+            const auto err = errno;
+            qCWarning(LOG_KCRASH) << "Failed to install signal handler:" << signal << strerror(err);
+        }
         sigaddset(&mask, signal);
     }
 
