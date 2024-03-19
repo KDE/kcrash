@@ -397,26 +397,33 @@ void KCrash::setCrashHandler(HandlerType handler)
     sigset_t mask;
     sigemptyset(&mask);
 
+    const auto signals = {
 #ifdef SIGSEGV
-    signal(SIGSEGV, handler);
-    sigaddset(&mask, SIGSEGV);
+        SIGSEGV,
 #endif
 #ifdef SIGBUS
-    signal(SIGBUS, handler);
-    sigaddset(&mask, SIGBUS);
+        SIGBUS,
 #endif
 #ifdef SIGFPE
-    signal(SIGFPE, handler);
-    sigaddset(&mask, SIGFPE);
+        SIGFPE,
 #endif
 #ifdef SIGILL
-    signal(SIGILL, handler);
-    sigaddset(&mask, SIGILL);
+        SIGILL,
 #endif
 #ifdef SIGABRT
-    signal(SIGABRT, handler);
-    sigaddset(&mask, SIGABRT);
+        SIGABRT,
 #endif
+    };
+
+    for (const auto &signal : signals) {
+        struct sigaction action {
+        };
+        action.sa_handler = handler;
+        action.sa_flags = SA_RESTART;
+        sigemptyset(&action.sa_mask);
+        sigaction(signal, &action, nullptr);
+        sigaddset(&mask, signal);
+    }
 
     sigprocmask(SIG_UNBLOCK, &mask, nullptr);
 #endif
