@@ -77,7 +77,7 @@ public:
     // - non-boolean values increase the argv by 2 slots
     // - this should always be the maximum of potentially used slots
     // - if you re-count slots, don't forget that the 'cmd' and terminal NULL take a slot each
-    std::array<const char *, 34> argv{};
+    std::array<const char *, 35> argv{};
     std::size_t argc = 0;
 
 private:

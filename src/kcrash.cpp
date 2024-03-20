@@ -133,6 +133,8 @@ namespace
 const KCrash::CoreConfig s_coreConfig;
 
 std::unique_ptr<char[]> s_glRenderer; // the GL_RENDERER
+QLoggingCategory::CategoryFilter s_oldLoggingCategoryFilter = nullptr;
+bool s_loggingCategoryFilterSet = false;
 
 QString glRenderer()
 {
@@ -166,6 +168,28 @@ QString bootId()
 #else
     return {};
 #endif
+}
+
+void enableCategoriesFilter(QLoggingCategory *category)
+{
+    if (s_oldLoggingCategoryFilter) {
+        s_oldLoggingCategoryFilter(category);
+    }
+
+    if (!category) {
+        return;
+    }
+
+    for (const auto &prefix : {"org.kde.", "kde.", "kf5.", "kf6.", "kf.", "plasma."}) {
+        // qstrncmp ensures nullptrs are handled correctly (strncmp would not!)
+        if (qstrncmp(prefix, category->categoryName(), strlen(prefix)) == 0) {
+            category->setEnabled(QtDebugMsg, true);
+            return;
+        }
+    }
+    if (qstrcmp(category->categoryName(), "default") == 0) {
+        category->setEnabled(QtDebugMsg, true);
+    }
 }
 
 } // namespace
@@ -226,6 +250,17 @@ void KCrash::initialize()
         KCrash::setDrKonqiEnabled(true);
     } else {
         // Don't qDebug here, it loads qtlogging.ini very early which prevents unittests from doing QStandardPaths::setTestModeEnabled(true) in initTestCase()
+
+        // When we had at least one auto-restart we forcefully enable debugging mode.
+        // This way if the crash happens again we'll have a better chance of debugging what's going on.
+        if (qEnvironmentVariableIsSet("KCRASH_AUTO_RESTARTED") && !qEnvironmentVariableIsSet("QT_LOGGING_RULES")
+            && qEnvironmentVariableIntValue("KCRASH_AUTO_VERBOSITY") != 0) {
+            s_loggingCategoryFilterSet = true;
+            if (auto defaultCategory = QLoggingCategory::defaultCategory()) {
+                defaultCategory->setEnabled(QtDebugMsg, true);
+            }
+            s_oldLoggingCategoryFilter = QLoggingCategory::installFilter(enableCategoriesFilter);
+        }
     }
 
     if (QCoreApplication::instance()) {
@@ -501,6 +536,10 @@ void KCrash::defaultCrashHandler(int sig)
             if (optionalExceptionMetadata->what) {
                 data.add("--exceptionwhat", optionalExceptionMetadata->what);
             }
+        }
+
+        if (s_loggingCategoryFilterSet) {
+            data.addBool("--automatic-verbosity");
         }
 
         if (s_glRenderer) {
