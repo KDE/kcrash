@@ -516,7 +516,11 @@ void KCrash::defaultCrashHandler(int sig)
 
         const QByteArray platformName = QGuiApplication::platformName().toUtf8();
         if (!platformName.isEmpty()) {
-            data.add("--platform", platformName.constData());
+            if (strcmp(platformName.constData(), "wayland-org.kde.kwin.qpa") == 0) { // redirect kwin's internal QPA to wayland proper
+                data.add("--platform", "wayland");
+            } else {
+                data.add("--platform", platformName.constData());
+            }
         }
 
 #if HAVE_X11
