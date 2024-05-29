@@ -61,7 +61,7 @@ add_feature_info("Core Pattern Raising"
     "Raising signals to kernel core patterns (iff the pattern is a process). You may wish to not install drkonqi if this can cause a UI conflict.")
 
 ecm_set_disabled_deprecation_versions(
-    QT 6.5
+    QT 6.7
     KF 5.102.0
 )
 
