@@ -52,9 +52,9 @@ target_link_libraries(KF6Crash PRIVATE Qt6::Gui Qt6::OpenGL KF6::CoreAddons)
 # in libc.so.7 -- it is in crt1.o, and so not available to shared
 # libraries. We just drop the normal no-undefined flag for library building
 # here, on the assumption that Linux CI will catch any *actual* undefineds.
-if (CMAKE_SYSTEM_NAME MATCHES "FreeBSD")
+if(CMAKE_SYSTEM_NAME MATCHES "FreeBSD")
     string(REPLACE "-Wl,--no-undefined" "" CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS}")
-endif ()
+endif()
 
 if(WITH_X11)
     target_link_libraries(KF6Crash PRIVATE X11::X11)

@@ -23,13 +23,13 @@ include(ECMDeprecationSettings)
 set(REQUIRED_QT_VERSION 6.5.0)
 find_package(Qt6 ${REQUIRED_QT_VERSION} CONFIG REQUIRED Core Gui OpenGL)
 
-if (UNIX AND NOT APPLE AND NOT ANDROID)
+if(UNIX AND NOT APPLE AND NOT ANDROID)
     option(WITH_X11 "Build with X11 integration" ON)
 else()
     set(WITH_X11 OFF)
 endif()
 
-if (WITH_X11)
+if(WITH_X11)
     find_package(X11 REQUIRED)
     set(HAVE_X11 TRUE)
 endif()
@@ -66,14 +66,14 @@ ecm_set_disabled_deprecation_versions(
 )
 
 add_subdirectory(src)
-if (BUILD_TESTING)
+if(BUILD_TESTING)
     add_subdirectory(autotests)
 endif()
 
 # create a Config.cmake and a ConfigVersion.cmake file and install them
 set(CMAKECONFIG_INSTALL_DIR "${KDE_INSTALL_CMAKEPACKAGEDIR}/KF6Crash")
 
-if (BUILD_QCH)
+if(BUILD_QCH)
     ecm_install_qch_export(
         TARGETS KF6Crash_QCH
         FILE KF6CrashQchTargets.cmake
@@ -98,10 +98,10 @@ install(FILES
   COMPONENT Devel
 )
 
-install(EXPORT KF6CrashTargets DESTINATION "${CMAKECONFIG_INSTALL_DIR}" FILE KF6CrashTargets.cmake NAMESPACE KF6:: )
+install(EXPORT KF6CrashTargets DESTINATION "${CMAKECONFIG_INSTALL_DIR}" FILE KF6CrashTargets.cmake NAMESPACE KF6::)
 
 install(FILES
-   ${kcrash_version_header}
+  ${kcrash_version_header}
   DESTINATION ${KDE_INSTALL_INCLUDEDIR_KF}/KCrash COMPONENT Devel
 )
 
