@@ -133,6 +133,7 @@ namespace
 const KCrash::CoreConfig s_coreConfig;
 
 std::unique_ptr<char[]> s_glRenderer; // the GL_RENDERER
+std::unique_ptr<char[]> s_qtVersion;
 
 QString glRenderer()
 {
@@ -227,6 +228,8 @@ void KCrash::initialize()
     } else {
         // Don't qDebug here, it loads qtlogging.ini very early which prevents unittests from doing QStandardPaths::setTestModeEnabled(true) in initTestCase()
     }
+
+    s_qtVersion.reset(qstrdup(qVersion()));
 
     if (QCoreApplication::instance()) {
         const QString path = QCoreApplication::applicationFilePath();
@@ -512,6 +515,10 @@ void KCrash::defaultCrashHandler(int sig)
 
         if (s_glRenderer) {
             data.add("--glrenderer", s_glRenderer.get());
+        }
+
+        if (s_qtVersion) {
+            data.add("--qtversion", s_qtVersion.get());
         }
 
         const QByteArray platformName = QGuiApplication::platformName().toUtf8();
