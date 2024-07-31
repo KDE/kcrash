@@ -30,7 +30,6 @@
 #include <qt_windows.h>
 #endif
 #ifdef Q_OS_LINUX
-#include <sys/poll.h>
 #include <sys/prctl.h>
 #endif
 
@@ -66,10 +65,6 @@
 #undef Q_GLOBAL_STATIC
 
 using namespace std::chrono_literals;
-
-#ifdef Q_OS_LINUX
-static QByteArray s_socketpath;
-#endif
 
 struct Args {
     Args() = default;
@@ -241,11 +236,6 @@ void KCrash::initialize()
     } else {
         qWarning() << "This process needs a QCoreApplication instance in order to use KCrash";
     }
-
-#ifdef Q_OS_LINUX
-    // Create socket path to transfer ptrace scope and open connection
-    s_socketpath = QFile::encodeName(QStringLiteral("%1/kcrash_%2").arg(QStandardPaths::writableLocation(QStandardPaths::RuntimeLocation)).arg(getpid()));
-#endif
 
     if (shouldWriteMetadataToDisk()) {
         // We do not actively clean up metadata via KCrash but some other service. This potentially means we litter
@@ -707,14 +697,6 @@ LONG WINAPI KCrash::win32UnhandledExceptionFilter(_EXCEPTION_POINTERS *exception
 
 static pid_t startDirectly(const char *argv[]);
 
-#ifdef Q_OS_LINUX
-static int write_socket(int sock, char *buffer, int len);
-static int read_socket(int sock, char *buffer, int len);
-
-static int openDrKonqiSocket(const QByteArray &socketpath);
-static int pollDrKonqiSocket(pid_t pid, int sockfd);
-#endif
-
 void KCrash::startProcess(int argc, const char *argv[], bool waitAndExit)
 {
     Q_UNUSED(argc);
@@ -732,23 +714,10 @@ void KCrash::startProcess(int argc, const char *argv[], bool waitAndExit)
         // and only send SIGCONT when it is about to attach a debugger.
 #ifdef Q_OS_LINUX
         // Declare the process that will be debugging the crashed KDE app (#245529).
-        // For now that will be DrKonqi, which may ask to transfer the ptrace scope to
-        // a debugger it is not an ancestor of (because it was started via kdeinit or
-        // KProcess::startDetached()) using a socket.
 #ifndef PR_SET_PTRACER
 #define PR_SET_PTRACER 0x59616d61
 #endif
         prctl(PR_SET_PTRACER, pid, 0, 0, 0);
-
-        int sockfd = openDrKonqiSocket(s_socketpath);
-
-        if (sockfd >= 0) {
-            // Wait while DrKonqi is running and the socket connection exists
-            // If the process was started directly, use waitpid(), as it's a child...
-            while ((running = waitpid(pid, nullptr, WNOHANG) != pid) && pollDrKonqiSocket(pid, sockfd) >= 0) { }
-            close(sockfd);
-            unlink(s_socketpath.constData());
-        }
 #endif
         if (running) {
             // If the process was started directly, use waitpid(), as it's a child...
@@ -798,140 +767,6 @@ static pid_t startDirectly(const char *argv[])
         return pid;
     }
 }
-
-#ifdef Q_OS_LINUX
-
-/*
- * Write 'len' bytes from 'buffer' into 'sock'.
- * returns 0 on success, -1 on failure.
- */
-static int write_socket(int sock, char *buffer, int len)
-{
-    ssize_t result;
-    int bytes_left = len;
-    while (bytes_left > 0) {
-        result = write(sock, buffer, bytes_left);
-        if (result > 0) {
-            buffer += result;
-            bytes_left -= result;
-        } else if (result == 0) {
-            return -1;
-        } else if ((result == -1) && (errno != EINTR) && (errno != EAGAIN)) {
-            return -1;
-        }
-    }
-    return 0;
-}
-
-/*
- * Read 'len' bytes from 'sock' into 'buffer'.
- * returns 0 on success, -1 on failure.
- */
-static int read_socket(int sock, char *buffer, int len)
-{
-    ssize_t result;
-    int bytes_left = len;
-    while (bytes_left > 0) {
-        result = read(sock, buffer, bytes_left);
-        if (result > 0) {
-            buffer += result;
-            bytes_left -= result;
-        } else if (result == 0) {
-            return -1;
-        } else if ((result == -1) && (errno != EINTR) && (errno != EAGAIN)) {
-            return -1;
-        }
-    }
-    return 0;
-}
-
-static int openDrKonqiSocket(const QByteArray &socketpath)
-{
-    int sockfd = socket(PF_UNIX, SOCK_STREAM, 0);
-    if (sockfd < 0) {
-        perror("Warning: socket() for communication with DrKonqi failed");
-        return -1;
-    }
-
-    struct sockaddr_un drkonqi_server;
-    drkonqi_server.sun_family = AF_UNIX;
-
-    if (socketpath.size() >= static_cast<int>(sizeof(drkonqi_server.sun_path))) {
-        fprintf(stderr, "Warning: socket path is too long\n");
-        close(sockfd);
-        return -1;
-    }
-    strcpy(drkonqi_server.sun_path, socketpath.constData());
-
-    unlink(drkonqi_server.sun_path); // remove potential stale socket
-    if (bind(sockfd, (struct sockaddr *)&drkonqi_server, sizeof(drkonqi_server)) < 0) {
-        perror("Warning: bind() for communication with DrKonqi failed");
-        close(sockfd);
-        unlink(drkonqi_server.sun_path);
-        return -1;
-    }
-
-    listen(sockfd, 1);
-
-    return sockfd;
-}
-
-static int pollDrKonqiSocket(pid_t pid, int sockfd)
-{
-    struct pollfd fd;
-    fd.fd = sockfd;
-    fd.events = POLLIN;
-    int r;
-    do {
-        r = poll(&fd, 1, 1000); // wait for 1 second for a request by DrKonqi
-    } while (r == -1 && errno == EINTR);
-    // only continue if POLLIN event returned
-    if (r == 0) { // timeout
-        return 0;
-    } else if (r == -1 || !(fd.revents & POLLIN)) { // some error
-        return -1;
-    }
-
-    static struct sockaddr_un drkonqi_client;
-    static socklen_t cllength = sizeof(drkonqi_client);
-    int clsockfd;
-    do {
-        clsockfd = accept(sockfd, (struct sockaddr *)&drkonqi_client, &cllength);
-    } while (clsockfd == -1 && errno == EINTR);
-    if (clsockfd < 0) {
-        return -1;
-    }
-
-    // check whether the message is coming from DrKonqi
-    static struct ucred ucred;
-    static socklen_t credlen = sizeof(struct ucred);
-    if (getsockopt(clsockfd, SOL_SOCKET, SO_PEERCRED, &ucred, &credlen) < 0) {
-        return -1;
-    }
-
-    if (ucred.pid != pid) {
-        fprintf(stderr, "Warning: peer pid does not match DrKonqi pid\n");
-        return -1;
-    }
-
-    // read PID to change ptrace scope
-    static const int msize = 21; // most digits in a 64bit int (+sign +'\0')
-    char msg[msize];
-    if (read_socket(clsockfd, msg, msize) == 0) {
-        int dpid = atoi(msg);
-        prctl(PR_SET_PTRACER, dpid, 0, 0, 0);
-        // confirm change to DrKonqi
-        if (write_socket(clsockfd, msg, msize) == 0) {
-            fprintf(stderr, "KCrash: ptrace access transferred to %s\n", msg);
-        }
-    }
-    close(clsockfd);
-
-    return 1;
-}
-
-#endif
-
 #endif // Q_OS_UNIX
 
 void KCrash::setErrorMessage(const QString &message)
