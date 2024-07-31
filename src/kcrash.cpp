@@ -232,7 +232,7 @@ void KCrash::initialize()
         const QString path = QCoreApplication::applicationFilePath();
         s_appFilePath.reset(qstrdup(qPrintable(path))); // This intentionally cannot be changed by the application!
         KCrash::setApplicationFilePath(path);
-        if (auto guiApp = qobject_cast<QGuiApplication *>(QCoreApplication::instance())) {
+        if (qobject_cast<QGuiApplication *>(QCoreApplication::instance())) {
             s_glRenderer.reset(qstrdup(glRenderer().toUtf8().constData()));
         }
     } else {
