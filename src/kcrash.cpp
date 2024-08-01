@@ -521,6 +521,8 @@ void KCrash::defaultCrashHandler(int sig)
             data.add("--qtversion", s_qtVersion.get());
         }
 
+        data.add("--kdeframeworksversion", KCRASH_VERSION_STRING);
+
         const QByteArray platformName = QGuiApplication::platformName().toUtf8();
         if (!platformName.isEmpty()) {
             if (strcmp(platformName.constData(), "wayland-org.kde.kwin.qpa") == 0) { // redirect kwin's internal QPA to wayland proper
