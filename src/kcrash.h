@@ -39,7 +39,7 @@ namespace KCrash
  *
  * This does nothing if $KDE_DEBUG is set.
  *
- * Call this in your main() to ensure that the crash handler is always launched.
+ * Call this in your main() after setting up KAboutData to ensure that the crash handler is launched.
  * @since 5.15
  */
 KCRASH_EXPORT void initialize();
