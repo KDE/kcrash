@@ -1,0 +1,15 @@
+include($KDE_DOCS/global/qt-module-defaults-online.qdocconf)
+
+project = KCrash
+description = Crash handling
+
+documentationinheaders = true
+
+headerdirs = .
+
+headers.fileextensions = "*.qdoc *.h"
+
+outputformats = HTML
+
+depends += \
+    qtcore
