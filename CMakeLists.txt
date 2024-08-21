@@ -19,6 +19,7 @@ include(KDEFrameworkCompilerSettings NO_POLICY_SCOPE)
 include(KDECMakeSettings)
 include(KDEGitCommitHooks)
 include(ECMDeprecationSettings)
+include(ECMGenerateQDoc)
 
 set(REQUIRED_QT_VERSION 6.7.0)
 find_package(Qt6 ${REQUIRED_QT_VERSION} CONFIG REQUIRED Core Gui)
@@ -37,11 +38,7 @@ find_package(Qt6Test ${REQUIRED_QT_VERSION} CONFIG REQUIRED)
 include(ECMGenerateExportHeader)
 include(ECMSetupVersion)
 include(ECMGenerateHeaders)
-include(ECMAddQch)
 include(ECMQtDeclareLoggingCategory)
-
-option(BUILD_QCH "Build API documentation in QCH format (for e.g. Qt Assistant, Qt Creator & KDevelop)" OFF)
-add_feature_info(QCH ${BUILD_QCH} "API documentation in QCH format (for e.g. Qt Assistant, Qt Creator & KDevelop)")
 
 set(kcrash_version_header "${CMAKE_CURRENT_BINARY_DIR}/src/kcrash_version.h")
 ecm_setup_version(PROJECT VARIABLE_PREFIX KCRASH
@@ -72,16 +69,6 @@ endif()
 
 # create a Config.cmake and a ConfigVersion.cmake file and install them
 set(CMAKECONFIG_INSTALL_DIR "${KDE_INSTALL_CMAKEPACKAGEDIR}/KF6Crash")
-
-if(BUILD_QCH)
-    ecm_install_qch_export(
-        TARGETS KF6Crash_QCH
-        FILE KF6CrashQchTargets.cmake
-        DESTINATION "${CMAKECONFIG_INSTALL_DIR}"
-        COMPONENT Devel
-    )
-    set(PACKAGE_INCLUDE_QCHTARGETS "include(\"\${CMAKE_CURRENT_LIST_DIR}/KF6CrashQchTargets.cmake\")")
-endif()
 
 include(CMakePackageConfigHelpers)
 
