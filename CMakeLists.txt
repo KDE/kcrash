@@ -19,6 +19,7 @@ include(KDEFrameworkCompilerSettings NO_POLICY_SCOPE)
 include(KDECMakeSettings)
 include(KDEGitCommitHooks)
 include(ECMDeprecationSettings)
+include(ECMGenerateQDoc)
 
 set(REQUIRED_QT_VERSION 6.5.0)
 find_package(Qt6 ${REQUIRED_QT_VERSION} CONFIG REQUIRED Core Gui OpenGL)
