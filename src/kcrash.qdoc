@@ -1,0 +1,9 @@
+/*!
+    \module KCrash
+    \title KCrash C++ Classes
+    \qtcmakepackage Crash
+
+    \brief Crash handling
+
+    Stuff
+*/
