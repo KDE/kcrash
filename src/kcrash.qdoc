@@ -1,9 +1,11 @@
 /*!
     \module KCrash
     \title KCrash C++ Classes
-    \qtcmakepackage Crash
+    \ingroup modules
+    \cmakepackage KF6
+    \cmakecomponent Crash
 
-    \brief Crash handling
+    \brief Support for application crash analysis and bug report from apps.
 
-    Stuff
+    KCrash provides support for intercepting and handling application crashes.
 */

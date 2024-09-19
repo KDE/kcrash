@@ -2,7 +2,7 @@
     \page kcrash-index.html
     \title KCrash
 
-    Crash
+    Support for application crash analysis and bug report from apps.
 
     \section1 Using the Module
 
@@ -10,7 +10,7 @@
 
     \section2 Building with CMake
 
-    \include {module-use.qdocinc} {building with cmake} {Widgets}
+    \include {module-use.qdocinc} {building with cmake} {Crash}
 
     \section1 API Reference
 

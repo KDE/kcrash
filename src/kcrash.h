@@ -42,9 +42,9 @@ namespace KCrash
 /*!
  * Initialize KCrash.
  *
- * This does nothing if $KDE_DEBUG is set.
+ * This does nothing if \c KDE_DEBUG is set.
  *
- * Call this in your main() after setting up KAboutData to ensure that the crash handler is launched.
+ * Call this in your main() after setting up \l KAboutData to ensure that the crash handler is launched.
  * \since KCrash 5.15
  */
 KCRASH_EXPORT void initialize();
@@ -141,11 +141,11 @@ KCRASH_EXPORT void setFlags(KCrash::CrashFlags flags);
  * By default, launching DrKonqi is enabled when QCoreApplication is created.
  * To disable it:
  * \code
- void disableDrKonqi()
- {
-     KCrash::setDrKonqiEnabled(false);
- }
- Q_CONSTRUCTOR_FUNCTION(disableDrKonqi)
+ * void disableDrKonqi()
+ * {
+ *     KCrash::setDrKonqiEnabled(false);
+ * }
+ * Q_CONSTRUCTOR_FUNCTION(disableDrKonqi)
  * \endcode
  * \note It is the crash handler's responsibility to launch DrKonqi.
  * Therefore, if no crash handler is set, this method also installs
