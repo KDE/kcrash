@@ -47,6 +47,10 @@ target_include_directories(KF6Crash INTERFACE "$<INSTALL_INTERFACE:${KDE_INSTALL
 target_link_libraries(KF6Crash PUBLIC Qt6::Core)
 target_link_libraries(KF6Crash PRIVATE Qt6::Gui Qt6::OpenGL KF6::CoreAddons)
 
+if (HAIKU)
+       target_link_libraries(KF6Crash PRIVATE network)
+endif ()
+
 # FIXME: It is needed to work around undefined reference error on FreeBSD
 # caused by --no-undefined because the `environ' variable does not exist
 # in libc.so.7 -- it is in crt1.o, and so not available to shared
