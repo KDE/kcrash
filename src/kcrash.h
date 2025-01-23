@@ -148,12 +148,25 @@ KCRASH_EXPORT void setDrKonqiEnabled(bool enabled);
 KCRASH_EXPORT bool isDrKonqiEnabled();
 
 /**
- * Allows providing information to be included in the bug report.
+ * Allows providing information to be included in the bug report. Prefer setErrorExtraInformation as it is more flexible.
  *
  * @since 5.69
  */
 KCRASH_EXPORT void setErrorMessage(const QString &message);
 
+/**
+ * Sets the error tags to be included in the crash report. These are rendered as tags in the crash reporting system.
+ * Note that server-side limits apply to the length of these so you should only put short, sortable data in here.
+ * @since 6.11
+ */
+KCRASH_EXPORT void setErrorTags(const QHash<QString, QString> &details);
+
+/**
+ * Sets the error details to be included in the crash report. These are rendered as extra blobs of data and can any form.
+ * Note that these are subject to event ingestion limits and should be kept at reasonable sizes to prevent event rejection.
+ * @since 6.11
+ */
+KCRASH_EXPORT void setErrorExtraData(const QHash<QString, QString> &details);
 }
 
 #endif

@@ -31,12 +31,38 @@ MetadataINIWriter::MetadataINIWriter(const QByteArray &path)
         fprintf(stderr, "Failed to open metadata file: %s\n", strerror(errno));
     } else if (fd >= 0) {
         writable = true;
-        const char *header = "[KCrash]\n";
-        write(fd, header, strlen(header));
     } else {
         fprintf(stderr, "MetadataINIWriter: Unexpected fd %d\n", fd);
         Q_UNREACHABLE();
     }
+}
+
+void MetadataINIWriter::startGroup(const char *group) const
+{
+    Q_ASSERT(group); // not null
+    Q_ASSERT(strlen(group) > 0); // not empty
+    Q_ASSERT(group[strlen(group) - 1] == '\n'); // end in newline
+
+    if (!writable) {
+        return;
+    }
+
+    write(fd, group, strlen(group));
+}
+
+void MetadataINIWriter::startTagsGroup() const
+{
+    startGroup("[KCrashTags]\n");
+}
+
+void MetadataINIWriter::startExtraGroup() const
+{
+    startGroup("[KCrashExtra]\n");
+}
+
+void MetadataINIWriter::startKCrashGroup() const
+{
+    startGroup("[KCrash]\n");
 }
 
 void MetadataINIWriter::close()

@@ -65,6 +65,7 @@
 #undef Q_GLOBAL_STATIC
 
 using namespace std::chrono_literals;
+using namespace Qt::StringLiterals;
 
 struct Args {
     Args() = default;
@@ -129,6 +130,10 @@ const KCrash::CoreConfig s_coreConfig;
 
 std::unique_ptr<char[]> s_glRenderer; // the GL_RENDERER
 std::unique_ptr<char[]> s_qtVersion;
+
+using DetailsHash = QHash<QByteArray, QByteArray>;
+std::unique_ptr<const DetailsHash> s_tags; // Sentry tags
+std::unique_ptr<const DetailsHash> s_extraData; // Sentry extra data
 
 QString glRenderer()
 {
@@ -488,8 +493,29 @@ void KCrash::defaultCrashHandler(int sig)
         if (!s_appFilePath) {
             fprintf(stderr, "KCrash: appFilePath points to nullptr!\n");
         } else if (ini.isWritable()) {
+            // [KCrashTags]
+            ini.startTagsGroup();
+            // Add our dynamic details. Note that since we only add them to the ini they do not count against our static argv limit in the Metadata class.
+            for (const auto &[key, value] : s_tags->asKeyValueRange()) {
+                ini.add(key.constData(), value.constData(), MetadataWriter::BoolValue::No);
+            }
+
+            // [KCrashExtra]
+            ini.startExtraGroup();
+            // Add our dynamic details. Note that since we only add them to the ini they do not count against our static argv limit in the Metadata class.
+            for (const auto &[key, value] : s_extraData->asKeyValueRange()) {
+                ini.add(key.constData(), value.constData(), MetadataWriter::BoolValue::No);
+            }
+            if (s_kcrashErrorMessage) {
+                // And also our legacy error message
+                ini.add("--_kcrash_ErrorMessage", s_kcrashErrorMessage.get(), MetadataWriter::BoolValue::No);
+            }
+
+            // [KCrash]
+            ini.startKCrashGroup();
             // Add the canonical exe path so the coredump daemon has more data points to map metadata to journald entry.
             ini.add("--exe", s_appFilePath.get(), MetadataWriter::BoolValue::No);
+
             data.setAdditionalWriter(&ini);
         }
 #endif
@@ -772,4 +798,26 @@ static pid_t startDirectly(const char *argv[])
 void KCrash::setErrorMessage(const QString &message)
 {
     s_kcrashErrorMessage.reset(qstrdup(message.toUtf8().constData()));
+}
+
+void KCrash::setErrorTags(const QHash<QString, QString> &details)
+{
+    DetailsHash data;
+    for (const auto &[key, value] : details.asKeyValueRange()) {
+        data.insert(("--"_L1 + key).toUtf8(), value.toUtf8());
+    }
+    // A bit awkard. We want the s_details to be const so we can't accidentally cause
+    // detachments, so we move our data into a unique ptr that is const.
+    s_tags = std::make_unique<const DetailsHash>(std::move(data));
+}
+
+void KCrash::setErrorExtraData(const QHash<QString, QString> &details)
+{
+    DetailsHash data;
+    for (const auto &[key, value] : details.asKeyValueRange()) {
+        data.insert(("--"_L1 + key).toUtf8(), value.toUtf8());
+    }
+    // A bit awkard. We want the s_details to be const so we can't accidentally cause
+    // detachments, so we move our data into a unique ptr that is const.
+    s_extraData = std::make_unique<const DetailsHash>(std::move(data));
 }

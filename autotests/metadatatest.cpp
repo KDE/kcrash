@@ -22,6 +22,7 @@ private Q_SLOTS:
         Metadata data("BEFEHL");
 #ifdef Q_OS_LINUX
         MetadataINIWriter iniWriter(iniFile.toLocal8Bit());
+        iniWriter.startKCrashGroup();
         data.setAdditionalWriter(&iniWriter);
 #endif
         data.add("--ABC", "FOO\nBAR");

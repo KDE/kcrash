@@ -40,6 +40,9 @@ public:
     explicit MetadataINIWriter(const QByteArray &path);
     ~MetadataINIWriter() override = default;
 
+    void startTagsGroup() const;
+    void startExtraGroup() const;
+    void startKCrashGroup() const;
     void add(const char *key, const char *value, BoolValue boolValue) override;
     void close() override;
 
@@ -47,6 +50,7 @@ public:
     [[nodiscard]] bool isWritable() const;
 
 private:
+    void startGroup(const char *group) const;
     bool writable = false;
     int fd = -1;
 
