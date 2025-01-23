@@ -151,7 +151,11 @@ void Metadata::add(const char *key, const char *value, BoolValue boolValue)
     Q_ASSERT(key);
     Q_ASSERT(value);
     Q_ASSERT(key[0] == '-' && key[1] == '-'); // well-formed '--' prefix. This is important. MetadataWriter presume this
-    Q_ASSERT(argc < argv.max_size()); // argv has a static max size. guard against exhaustion
+    const auto belowCap = argc < argv.max_size();
+    Q_ASSERT(belowCap); // argv has a static max size. guard against exhaustion
+    if (!belowCap) {
+        return;
+    }
 
     argv.at(argc++) = key;
     if (!boolValue) {
