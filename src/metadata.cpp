@@ -80,7 +80,7 @@ void MetadataINIWriter::add(const char *key, const char *value, BoolValue boolVa
     Q_ASSERT(key[0] == '-' && key[1] == '-'); // well-formed '--' prefix. This is important. MetadataWriter presume this
     Q_UNUSED(boolValue); // value is a bool string but we don't care, we always write the value anyway
 
-    if (fd < 0) {
+    if (!writable) {
         return;
     }
 
