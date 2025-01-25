@@ -11,7 +11,7 @@ portingAid: false
 deprecated: false
 release: true
 libraries:
- - cmake: "KF6::Crash"
+    - cmake: "KF6::Crash"
 cmakename: KF6Crash
 
 public_lib: true

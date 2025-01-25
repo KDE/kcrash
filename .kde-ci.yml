@@ -1,9 +1,9 @@
 Dependencies:
-- 'on': ['@all']
-  'require':
+ - 'on': ['@all']
+   'require':
     'frameworks/extra-cmake-modules': '@same'
-    'frameworks/kcoreaddons' : '@same'
+    'frameworks/kcoreaddons': '@same'
 
 Options:
-  test-before-installing: True
-  require-passing-tests-on: [ 'Linux', 'FreeBSD', 'Windows' ]
+ test-before-installing: true
+ require-passing-tests-on: ['Linux', 'FreeBSD', 'Windows']
