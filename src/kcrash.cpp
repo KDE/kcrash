@@ -493,19 +493,24 @@ void KCrash::defaultCrashHandler(int sig)
         if (!s_appFilePath) {
             fprintf(stderr, "KCrash: appFilePath points to nullptr!\n");
         } else if (ini.isWritable()) {
-            // [KCrashTags]
-            ini.startTagsGroup();
-            // Add our dynamic details. Note that since we only add them to the ini they do not count against our static argv limit in the Metadata class.
-            for (const auto &[key, value] : s_tags->asKeyValueRange()) {
-                ini.add(key.constData(), value.constData(), MetadataWriter::BoolValue::No);
+            if (s_tags) {
+                // [KCrashTags]
+                ini.startTagsGroup();
+                // Add our dynamic details. Note that since we only add them to the ini they do not count against our static argv limit in the Metadata class.
+                for (const auto &[key, value] : s_tags->asKeyValueRange()) {
+                    ini.add(key.constData(), value.constData(), MetadataWriter::BoolValue::No);
+                }
             }
 
-            // [KCrashExtra]
-            ini.startExtraGroup();
-            // Add our dynamic details. Note that since we only add them to the ini they do not count against our static argv limit in the Metadata class.
-            for (const auto &[key, value] : s_extraData->asKeyValueRange()) {
-                ini.add(key.constData(), value.constData(), MetadataWriter::BoolValue::No);
+            if (s_extraData) {
+                // [KCrashExtra]
+                ini.startExtraGroup();
+                // Add our dynamic details. Note that since we only add them to the ini they do not count against our static argv limit in the Metadata class.
+                for (const auto &[key, value] : s_extraData->asKeyValueRange()) {
+                    ini.add(key.constData(), value.constData(), MetadataWriter::BoolValue::No);
+                }
             }
+
             if (s_kcrashErrorMessage) {
                 // And also our legacy error message
                 ini.add("--_kcrash_ErrorMessage", s_kcrashErrorMessage.get(), MetadataWriter::BoolValue::No);
