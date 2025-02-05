@@ -20,8 +20,15 @@ include(KDECMakeSettings)
 include(KDEGitCommitHooks)
 include(ECMDeprecationSettings)
 
+option(WITH_OPENGL "Build with OpenGL support" ON)
+
 set(REQUIRED_QT_VERSION 6.6.0)
-find_package(Qt6 ${REQUIRED_QT_VERSION} CONFIG REQUIRED Core Gui OpenGL)
+set(REQUIRED_QT_COMPONENTS Core Gui)
+if(WITH_OPENGL)
+    list(APPEND REQUIRED_QT_COMPONENTS OpenGL)
+    SET(HAVE_OPENGL TRUE)
+endif()
+find_package(Qt6 ${REQUIRED_QT_VERSION} CONFIG REQUIRED ${REQUIRED_QT_COMPONENTS})
 
 if(UNIX AND NOT APPLE AND NOT ANDROID AND NOT HAIKU)
     option(WITH_X11 "Build with X11 integration" ON)

@@ -1,3 +1,4 @@
+#cmakedefine01 HAVE_OPENGL
 #cmakedefine01 HAVE_X11
 #cmakedefine01 KCRASH_CORE_PATTERN_RAISE
 

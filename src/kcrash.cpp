@@ -45,11 +45,14 @@
 #include <QFile>
 #include <QGuiApplication>
 #include <QLibraryInfo>
+#include <QStandardPaths>
+#include <QThread>
+
+#if HAVE_OPENGL
 #include <QOffscreenSurface>
 #include <QOpenGLContext>
 #include <QOpenGLFunctions>
-#include <QStandardPaths>
-#include <QThread>
+#endif
 
 #if HAVE_X11
 #include <X11/Xlib.h>
@@ -135,6 +138,7 @@ using DetailsHash = QHash<QByteArray, QByteArray>;
 std::unique_ptr<const DetailsHash> s_tags; // Sentry tags
 std::unique_ptr<const DetailsHash> s_extraData; // Sentry extra data
 
+#if HAVE_OPENGL
 QString glRenderer()
 {
     QOpenGLContext context;
@@ -154,6 +158,7 @@ QString glRenderer()
     });
     return QString::fromUtf8(reinterpret_cast<const char *>(context.functions()->glGetString(GL_RENDERER)));
 }
+#endif
 
 QString bootId()
 {
@@ -235,9 +240,11 @@ void KCrash::initialize()
         const QString path = QCoreApplication::applicationFilePath();
         s_appFilePath.reset(qstrdup(qPrintable(path))); // This intentionally cannot be changed by the application!
         KCrash::setApplicationFilePath(path);
+#if HAVE_OPENGL
         if (qobject_cast<QGuiApplication *>(QCoreApplication::instance())) {
             s_glRenderer.reset(qstrdup(glRenderer().toUtf8().constData()));
         }
+#endif
     } else {
         qWarning() << "This process needs a QCoreApplication instance in order to use KCrash";
     }
