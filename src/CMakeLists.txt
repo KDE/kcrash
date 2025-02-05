@@ -45,7 +45,7 @@ ecm_generate_export_header(KF6Crash
 target_include_directories(KF6Crash INTERFACE "$<INSTALL_INTERFACE:${KDE_INSTALL_INCLUDEDIR_KF}/KCrash>")
 
 target_link_libraries(KF6Crash PUBLIC Qt6::Core)
-target_link_libraries(KF6Crash PRIVATE Qt6::Gui Qt6::OpenGL KF6::CoreAddons)
+target_link_libraries(KF6Crash PRIVATE Qt6::Gui KF6::CoreAddons)
 
 if (HAIKU)
        target_link_libraries(KF6Crash PRIVATE network)

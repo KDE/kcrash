@@ -42,6 +42,7 @@ public:
 
     void startTagsGroup() const;
     void startExtraGroup() const;
+    void startGPUGroup() const;
     void startKCrashGroup() const;
     void add(const char *key, const char *value, BoolValue boolValue) override;
     void close() override;
