@@ -45,9 +45,6 @@
 #include <QFile>
 #include <QGuiApplication>
 #include <QLibraryInfo>
-#include <QOffscreenSurface>
-#include <QOpenGLContext>
-#include <QOpenGLFunctions>
 #include <QStandardPaths>
 #include <QThread>
 
@@ -128,32 +125,12 @@ namespace
 {
 const KCrash::CoreConfig s_coreConfig;
 
-std::unique_ptr<char[]> s_glRenderer; // the GL_RENDERER
 std::unique_ptr<char[]> s_qtVersion;
 
 using DetailsHash = QHash<QByteArray, QByteArray>;
 std::unique_ptr<const DetailsHash> s_tags; // Sentry tags
 std::unique_ptr<const DetailsHash> s_extraData; // Sentry extra data
-
-QString glRenderer()
-{
-    QOpenGLContext context;
-    QOffscreenSurface surface;
-    surface.create();
-
-    if (!context.create()) {
-        return {};
-    }
-
-    if (!context.makeCurrent(&surface)) {
-        return {};
-    }
-
-    auto done = qScopeGuard([&context] {
-        context.doneCurrent();
-    });
-    return QString::fromUtf8(reinterpret_cast<const char *>(context.functions()->glGetString(GL_RENDERER)));
-}
+std::unique_ptr<const DetailsHash> s_gpuContext; // Sentry gpu context
 
 QString bootId()
 {
@@ -235,9 +212,6 @@ void KCrash::initialize()
         const QString path = QCoreApplication::applicationFilePath();
         s_appFilePath.reset(qstrdup(qPrintable(path))); // This intentionally cannot be changed by the application!
         KCrash::setApplicationFilePath(path);
-        if (qobject_cast<QGuiApplication *>(QCoreApplication::instance())) {
-            s_glRenderer.reset(qstrdup(glRenderer().toUtf8().constData()));
-        }
     } else {
         qWarning() << "This process needs a QCoreApplication instance in order to use KCrash";
     }
@@ -510,10 +484,18 @@ void KCrash::defaultCrashHandler(int sig)
                     ini.add(key.constData(), value.constData(), MetadataWriter::BoolValue::No);
                 }
             }
-
             if (s_kcrashErrorMessage) {
                 // And also our legacy error message
                 ini.add("--_kcrash_ErrorMessage", s_kcrashErrorMessage.get(), MetadataWriter::BoolValue::No);
+            }
+
+            if (s_gpuContext) {
+                // [KCrashGPU]
+                ini.startGPUGroup();
+                // Add our dynamic details. Note that since we only add them to the ini they do not count against our static argv limit in the Metadata class.
+                for (const auto &[key, value] : s_gpuContext->asKeyValueRange()) {
+                    ini.add(key.constData(), value.constData(), MetadataWriter::BoolValue::No);
+                }
             }
 
             // [KCrash]
@@ -532,10 +514,6 @@ void KCrash::defaultCrashHandler(int sig)
             if (optionalExceptionMetadata->what) {
                 data.add("--exceptionwhat", optionalExceptionMetadata->what);
             }
-        }
-
-        if (s_glRenderer) {
-            data.add("--glrenderer", s_glRenderer.get());
         }
 
         if (s_qtVersion) {
@@ -825,4 +803,15 @@ void KCrash::setErrorExtraData(const QHash<QString, QString> &details)
     // A bit awkard. We want the s_details to be const so we can't accidentally cause
     // detachments, so we move our data into a unique ptr that is const.
     s_extraData = std::make_unique<const DetailsHash>(std::move(data));
+}
+
+void KCrash::setGPUData(const QVariantHash &gpuData)
+{
+    DetailsHash data;
+    for (const auto &[key, value] : gpuData.asKeyValueRange()) {
+        data.insert(("--"_L1 + key).toUtf8(), value.toByteArray());
+    }
+    // A bit awkard. We want the s_details to be const so we can't accidentally cause
+    // detachments, so we move our data into a unique ptr that is const.
+    s_gpuContext = std::make_unique<const DetailsHash>(std::move(data));
 }

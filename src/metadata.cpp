@@ -60,6 +60,11 @@ void MetadataINIWriter::startExtraGroup() const
     startGroup("[KCrashExtra]\n");
 }
 
+void MetadataINIWriter::startGPUGroup() const
+{
+    startGroup("[KCrashGPU]\n");
+}
+
 void MetadataINIWriter::startKCrashGroup() const
 {
     startGroup("[KCrash]\n");

@@ -167,6 +167,21 @@ KCRASH_EXPORT void setErrorTags(const QHash<QString, QString> &details);
  * @since 6.11
  */
 KCRASH_EXPORT void setErrorExtraData(const QHash<QString, QString> &details);
+
+/**
+ * Sets better GPU data.
+ * By default KCrash will try to determine the GPU name, this may however not be accurate data. In particular on
+ * multi-gpu systems it may not be possible to determine whether the integrated or dedicated GPU is in use.
+ * You should call this function once you know which GPU will be in use for application. This is a free form string.
+ * Server-side limits may apply; keep it as short as possible.
+ *
+ * At least 'name' should be set. Additional supported fields follow Sentry unless documented otherwise.
+ *
+ * Supported fields are listed at
+ * https://develop.sentry.dev/sdk/data-model/event-payloads/contexts/#gpu-context
+ * @since 6.11
+ */
+KCRASH_EXPORT void setGPUData(const QVariantHash &data);
 }
 
 #endif
