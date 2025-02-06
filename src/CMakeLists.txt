@@ -1,3 +1,5 @@
+add_subdirectory(qml)
+
 add_library(KF6Crash)
 add_library(KF6::Crash ALIAS KF6Crash)
 
