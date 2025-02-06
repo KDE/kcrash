@@ -185,6 +185,12 @@ static bool shouldWriteMetadataToDisk()
 
 void KCrash::initialize()
 {
+    static bool initialized = false;
+    if (initialized) {
+        return;
+    }
+    initialized = true;
+
     if (s_launchDrKonqi == 0) { // disabled by the program itself
         return;
     }
