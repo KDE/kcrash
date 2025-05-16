@@ -10,5 +10,7 @@ sourcedirs += .
 
 outputformats = HTML
 
+navigation.landingpage = "KCrash"
+
 depends += \
     qtcore
