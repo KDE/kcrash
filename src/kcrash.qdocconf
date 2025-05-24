@@ -28,3 +28,5 @@ qhp.KCrash.subprojects.classes.title = C++ Classes
 qhp.KCrash.subprojects.classes.indexTitle = KCrash C++ Classes
 qhp.KCrash.subprojects.classes.selectors = class fake:headerfile
 qhp.KCrash.subprojects.classes.sortPages = true
+
+tagfile = kcrash.tags
