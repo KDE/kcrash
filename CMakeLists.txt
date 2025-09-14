@@ -59,7 +59,7 @@ add_feature_info("Core Pattern Raising"
 
 ecm_set_disabled_deprecation_versions(
     QT 6.10.0
-    KF 6.17.0
+    KF 6.18.0
 )
 
 add_subdirectory(src)
