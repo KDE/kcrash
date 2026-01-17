@@ -114,10 +114,12 @@ static std::unique_ptr<char[]> s_appName; // the binary name (may be altered by 
 static std::unique_ptr<char[]> s_appPath; // the binary dir path (may be altered by the application)
 static Args s_autoRestartCommandLine;
 static std::unique_ptr<char[]> s_drkonqiPath;
+static std::unique_ptr<char[]> s_drkonqiReporterPath;
 static KCrash::CrashFlags s_flags = KCrash::CrashFlags();
 static int s_launchDrKonqi = -1; // -1=initial value 0=disabled 1=enabled
 static int s_originalSignal = -1;
 static QByteArray s_metadataPath;
+static bool s_initialized = false;
 
 static std::unique_ptr<char[]> s_kcrashErrorMessage;
 
@@ -146,8 +148,6 @@ QString bootId()
 #endif
 }
 
-} // namespace
-
 static QStringList libexecPaths()
 {
     // Static since we only need to evaluate once.
@@ -159,6 +159,144 @@ static QStringList libexecPaths()
         };
     return list;
 }
+
+#ifdef Q_OS_LINUX
+void writeIniMetadata(KCrash::Metadata &data, KCrash::MetadataINIWriter &ini)
+{
+    if (!ini.isWritable()) {
+        return;
+    }
+
+    if (s_tags) {
+        // [KCrashTags]
+        ini.startTagsGroup();
+        // Add our dynamic details. Note that since we only add them to the ini they do not count against our static argv limit in the Metadata class.
+        for (const auto &[key, value] : s_tags->asKeyValueRange()) {
+            ini.add(key.constData(), value.constData(), KCrash::MetadataWriter::BoolValue::No);
+        }
+    }
+
+    if (s_extraData) {
+        // [KCrashExtra]
+        ini.startExtraGroup();
+        // Add our dynamic details. Note that since we only add them to the ini they do not count against our static argv limit in the Metadata class.
+        for (const auto &[key, value] : s_extraData->asKeyValueRange()) {
+            ini.add(key.constData(), value.constData(), KCrash::MetadataWriter::BoolValue::No);
+        }
+    }
+    if (s_kcrashErrorMessage) {
+        // And also our legacy error message
+        ini.add("--_kcrash_ErrorMessage", s_kcrashErrorMessage.get(), KCrash::MetadataWriter::BoolValue::No);
+    }
+
+    if (s_gpuContext) {
+        // [KCrashGPU]
+        ini.startGPUGroup();
+        // Add our dynamic details. Note that since we only add them to the ini they do not count against our static argv limit in the Metadata class.
+        for (const auto &[key, value] : s_gpuContext->asKeyValueRange()) {
+            ini.add(key.constData(), value.constData(), KCrash::MetadataWriter::BoolValue::No);
+        }
+    }
+
+    // [KCrash]
+    ini.startKCrashGroup();
+    // Add the canonical exe path so the coredump daemon has more data points to map metadata to journald entry.
+    if (s_appFilePath) {
+        ini.add("--exe", s_appFilePath.get(), KCrash::MetadataWriter::BoolValue::No);
+    }
+
+    data.setAdditionalWriter(&ini);
+}
+#endif
+
+void addCommonMetadata(KCrash::Metadata &data, int sig)
+{
+    if (auto optionalExceptionMetadata = KCrash::exceptionMetadata(); optionalExceptionMetadata.has_value()) {
+        if (optionalExceptionMetadata->klass) {
+            data.add("--exceptionname", optionalExceptionMetadata->klass);
+        }
+        if (optionalExceptionMetadata->what) {
+            data.add("--exceptionwhat", optionalExceptionMetadata->what);
+        }
+    }
+
+    if (s_qtVersion) {
+        data.add("--qtversion", s_qtVersion.get());
+    }
+
+    data.add("--kdeframeworksversion", KCRASH_VERSION_STRING);
+
+    const QByteArray platformName = QGuiApplication::platformName().toUtf8();
+    if (!platformName.isEmpty()) {
+        if (strcmp(platformName.constData(), "wayland-org.kde.kwin.qpa") == 0) { // redirect kwin's internal QPA to wayland proper
+            data.add("--platform", "wayland");
+        } else {
+            data.add("--platform", platformName.constData());
+        }
+    }
+
+#if HAVE_X11
+    if (platformName == QByteArrayLiteral("xcb")) {
+        // start up on the correct display
+        char *display = nullptr;
+        if (auto disp = qGuiApp->nativeInterface<QNativeInterface::QX11Application>()->display()) {
+            display = XDisplayString(disp);
+        } else {
+            display = getenv("DISPLAY");
+        }
+        data.add("--display", display);
+    }
+#endif
+
+    data.add("--appname", s_appName ? s_appName.get() : "<unknown>");
+
+    // only add apppath if it's not NULL
+    if (s_appPath && s_appPath[0]) {
+        data.add("--apppath", s_appPath.get());
+    }
+
+    // signal number -- will never be NULL
+    char sigtxt[10];
+    sprintf(sigtxt, "%d", sig);
+    data.add("--signal", sigtxt);
+
+    char pidtxt[20];
+    sprintf(pidtxt, "%lld", QCoreApplication::applicationPid());
+    data.add("--pid", pidtxt);
+
+    const KAboutData about = KAboutData::applicationData();
+    if (about.internalVersion()) {
+        data.add("--appversion", about.internalVersion());
+    }
+
+    if (about.internalProgramName()) {
+        data.add("--programname", about.internalProgramName());
+    }
+
+    if (about.internalBugAddress()) {
+        data.add("--bugaddress", about.internalBugAddress());
+    }
+
+    if (about.internalProductName()) {
+        data.add("--productname", about.internalProductName());
+    }
+
+    if (s_flags & KCrash::SaferDialog) {
+        data.addBool("--safer");
+    }
+
+    if ((s_flags & KCrash::AutoRestart) && s_autoRestartCommandLine) {
+        data.addBool("--restarted");
+    }
+
+#if defined(Q_OS_WIN)
+    char threadId[8] = {0};
+    sprintf(threadId, "%d", GetCurrentThreadId());
+    data.add("--thread", threadId);
+#endif
+}
+
+} // namespace
 
 namespace KCrash
 {
@@ -215,6 +353,8 @@ void KCrash::initialize()
     } else {
         qWarning() << "This process needs a QCoreApplication instance in order to use KCrash";
     }
+
+    s_initialized = true;
 
     if (shouldWriteMetadataToDisk()) {
         // We do not actively clean up metadata via KCrash but some other service. This potentially means we litter
@@ -350,6 +490,43 @@ bool KCrash::isDrKonqiEnabled()
     return s_launchDrKonqi == 1;
 }
 
+bool KCrash::reportError(const QString &title, const QString &message)
+{
+    if (!s_initialized) {
+        qCWarning(LOG_KCRASH) << "Cannot report error without calling KCrash::initialize()";
+        return false;
+    }
+
+    if (!s_drkonqiReporterPath) {
+        const QString exec = QStandardPaths::findExecutable(QStringLiteral("drkonqi-sentry-reporter"), libexecPaths());
+        if (exec.isEmpty()) {
+            qCDebug(LOG_KCRASH) << "Could not find drkonqi-sentry-reporter in search paths:" << libexecPaths();
+            return false;
+        } else {
+            s_drkonqiReporterPath.reset(qstrdup(qPrintable(exec)));
+        }
+    }
+
+    Metadata data(s_drkonqiReporterPath.get());
+
+#ifdef Q_OS_LINUX
+    if (!s_metadataPath.isEmpty()) {
+        MetadataINIWriter ini(s_metadataPath);
+        writeIniMetadata(data, ini);
+    }
+#endif
+
+    addCommonMetadata(data, 0);
+
+    data.add("--title", title.toUtf8().constData());
+    data.add("--message", message.toUtf8().constData());
+
+    data.close();
+
+    startProcess(data.argc, data.argv.data(), false);
+    return true;
+}
+
 void KCrash::setCrashHandler(HandlerType handler)
 {
 #if defined(Q_OS_WIN)
@@ -466,132 +643,12 @@ void KCrash::defaultCrashHandler(int sig)
         // not exactly sure how, maybe some race condition due to KCrashDelaySetHandler ?
         if (!s_appFilePath) {
             fprintf(stderr, "KCrash: appFilePath points to nullptr!\n");
-        } else if (ini.isWritable()) {
-            if (s_tags) {
-                // [KCrashTags]
-                ini.startTagsGroup();
-                // Add our dynamic details. Note that since we only add them to the ini they do not count against our static argv limit in the Metadata class.
-                for (const auto &[key, value] : s_tags->asKeyValueRange()) {
-                    ini.add(key.constData(), value.constData(), MetadataWriter::BoolValue::No);
-                }
-            }
-
-            if (s_extraData) {
-                // [KCrashExtra]
-                ini.startExtraGroup();
-                // Add our dynamic details. Note that since we only add them to the ini they do not count against our static argv limit in the Metadata class.
-                for (const auto &[key, value] : s_extraData->asKeyValueRange()) {
-                    ini.add(key.constData(), value.constData(), MetadataWriter::BoolValue::No);
-                }
-            }
-            if (s_kcrashErrorMessage) {
-                // And also our legacy error message
-                ini.add("--_kcrash_ErrorMessage", s_kcrashErrorMessage.get(), MetadataWriter::BoolValue::No);
-            }
-
-            if (s_gpuContext) {
-                // [KCrashGPU]
-                ini.startGPUGroup();
-                // Add our dynamic details. Note that since we only add them to the ini they do not count against our static argv limit in the Metadata class.
-                for (const auto &[key, value] : s_gpuContext->asKeyValueRange()) {
-                    ini.add(key.constData(), value.constData(), MetadataWriter::BoolValue::No);
-                }
-            }
-
-            // [KCrash]
-            ini.startKCrashGroup();
-            // Add the canonical exe path so the coredump daemon has more data points to map metadata to journald entry.
-            ini.add("--exe", s_appFilePath.get(), MetadataWriter::BoolValue::No);
-
-            data.setAdditionalWriter(&ini);
+        } else {
+            writeIniMetadata(data, ini);
         }
 #endif
 
-        if (auto optionalExceptionMetadata = KCrash::exceptionMetadata(); optionalExceptionMetadata.has_value()) {
-            if (optionalExceptionMetadata->klass) {
-                data.add("--exceptionname", optionalExceptionMetadata->klass);
-            }
-            if (optionalExceptionMetadata->what) {
-                data.add("--exceptionwhat", optionalExceptionMetadata->what);
-            }
-        }
-
-        if (s_qtVersion) {
-            data.add("--qtversion", s_qtVersion.get());
-        }
-
-        data.add("--kdeframeworksversion", KCRASH_VERSION_STRING);
-
-        const QByteArray platformName = QGuiApplication::platformName().toUtf8();
-        if (!platformName.isEmpty()) {
-            if (strcmp(platformName.constData(), "wayland-org.kde.kwin.qpa") == 0) { // redirect kwin's internal QPA to wayland proper
-                data.add("--platform", "wayland");
-            } else {
-                data.add("--platform", platformName.constData());
-            }
-        }
-
-#if HAVE_X11
-        if (platformName == QByteArrayLiteral("xcb")) {
-            // start up on the correct display
-            char *display = nullptr;
-            if (auto disp = qGuiApp->nativeInterface<QNativeInterface::QX11Application>()->display()) {
-                display = XDisplayString(disp);
-            } else {
-                display = getenv("DISPLAY");
-            }
-            data.add("--display", display);
-        }
-#endif
-
-        data.add("--appname", s_appName ? s_appName.get() : "<unknown>");
-
-        // only add apppath if it's not NULL
-        if (s_appPath && s_appPath[0]) {
-            data.add("--apppath", s_appPath.get());
-        }
-
-        // signal number -- will never be NULL
-        char sigtxt[10];
-        sprintf(sigtxt, "%d", sig);
-        data.add("--signal", sigtxt);
-
-        char pidtxt[20];
-        sprintf(pidtxt, "%lld", QCoreApplication::applicationPid());
-        data.add("--pid", pidtxt);
-
-        const KAboutData *about = KAboutData::applicationDataPointer();
-        if (about) {
-            if (about->internalVersion()) {
-                data.add("--appversion", about->internalVersion());
-            }
-
-            if (about->internalProgramName()) {
-                data.add("--programname", about->internalProgramName());
-            }
-
-            if (about->internalBugAddress()) {
-                data.add("--bugaddress", about->internalBugAddress());
-            }
-
-            if (about->internalProductName()) {
-                data.add("--productname", about->internalProductName());
-            }
-        }
-
-        if (s_flags & SaferDialog) {
-            data.addBool("--safer");
-        }
-
-        if ((s_flags & AutoRestart) && s_autoRestartCommandLine) {
-            data.addBool("--restarted");
-        }
-
-#if defined(Q_OS_WIN)
-        char threadId[8] = {0};
-        sprintf(threadId, "%d", GetCurrentThreadId());
-        data.add("--thread", threadId);
-#endif
+        addCommonMetadata(data, sig);
 
         data.close();
         const int argc = data.argc;

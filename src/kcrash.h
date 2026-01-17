@@ -13,7 +13,7 @@
 
 #include <qglobal.h>
 
-class QString;
+#include <QString>
 
 /*!
  * \namespace KCrash
@@ -186,6 +186,15 @@ KCRASH_EXPORT void setErrorTags(const QHash<QString, QString> &details);
  * \since 6.11
  */
 KCRASH_EXPORT void setErrorExtraData(const QHash<QString, QString> &details);
+
+/*!
+ * Reports a non-fatal error using the crash reporting pipeline.
+ *
+ * Returns true when the reporting process was started.
+ *
+ * \since 6.23
+ */
+KCRASH_EXPORT bool reportError(const QString &title, const QString &message);
 
 /*!
  * Sets better GPU data.
