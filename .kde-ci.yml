@@ -7,3 +7,4 @@ Dependencies:
 Options:
  test-before-installing: true
  require-passing-tests-on: ['Linux', 'FreeBSD', 'Windows']
+ enable-lsan: True
