@@ -535,9 +535,12 @@ void KCrash::defaultCrashHandler(int sig)
         if (platformName == QByteArrayLiteral("xcb")) {
             // start up on the correct display
             char *display = nullptr;
-            if (auto disp = qGuiApp->nativeInterface<QNativeInterface::QX11Application>()->display()) {
-                display = XDisplayString(disp);
-            } else {
+            if (qGuiApp) {
+                if (auto disp = qGuiApp->nativeInterface<QNativeInterface::QX11Application>()->display()) {
+                    display = XDisplayString(disp);
+                }
+            }
+            if (!display) {
                 display = getenv("DISPLAY");
             }
             data.add("--display", display);
