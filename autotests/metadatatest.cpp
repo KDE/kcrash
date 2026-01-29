@@ -43,6 +43,7 @@ private Q_SLOTS:
         QCOMPARE(ini.readLine(), "[KCrash]\n");
         QCOMPARE(ini.readLine(), "ABC=FOO\\nBAR\n");
         QCOMPARE(ini.readLine(), "Meow=true\n");
+        QCOMPARE(ini.readLine(), "[KCrashComplete]\n");
         QVERIFY(ini.atEnd()); // nothing after final newline
 #endif
     }

@@ -72,8 +72,12 @@ void MetadataINIWriter::startKCrashGroup() const
 
 void MetadataINIWriter::close()
 {
-    if (fd >= 0 && ::close(fd) == -1) {
-        fprintf(stderr, "Failed to close metadata file: %s\n", strerror(errno));
+    if (fd >= 0) {
+        constexpr std::string_view endGroup = "[KCrashComplete]\n";
+        write(fd, endGroup.data(), endGroup.size());
+        if (::close(fd) == -1) {
+            fprintf(stderr, "Failed to close metadata file: %s\n", strerror(errno));
+        }
     }
     writable = false;
 }
