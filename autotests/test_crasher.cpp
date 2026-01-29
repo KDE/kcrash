@@ -8,6 +8,7 @@
 #include <QApplication>
 #include <QDebug>
 #include <QFile>
+#include <QStandardPaths>
 #include <kcrash.h>
 #ifdef Q_OS_UNIX
 #include <cerrno>
@@ -24,6 +25,7 @@ void saveFunction(int)
 
 int main(int argc, char **argv)
 {
+    QStandardPaths::setTestModeEnabled(true);
     QApplication app(argc, argv);
 
     KCrash::initialize();
@@ -53,7 +55,12 @@ int main(int argc, char **argv)
     if (!output.open(QIODevice::WriteOnly | QIODevice::Append)) {
         return 1;
     }
-    if (qEnvironmentVariableIsEmpty("KCRASH_AUTO_RESTARTED")) {
+
+    if (flag == "PartialMetadata") {
+        output.write("PartialMetadata\n");
+        output.flush();
+        delete (char *)0xdead;
+    } else if (qEnvironmentVariableIsEmpty("KCRASH_AUTO_RESTARTED")) {
         output.write("starting ");
         output.write(flag);
         output.write("\n");

@@ -8,7 +8,13 @@
 #include <QDebug>
 #include <QFile>
 #include <QProcess>
+#include <QTemporaryDir>
 #include <QTest>
+
+namespace
+{
+const QString s_testMetadataFile = QDir::homePath() + "/.qttest/cache/kcrash-metadata/test.ini";
+} // namespace
 
 class KCrashTest : public QObject
 {
@@ -21,9 +27,14 @@ private Q_SLOTS:
         // change to the bin dir
         QDir::setCurrent(QCoreApplication::applicationDirPath());
     }
+    void init()
+    {
+        QFile::remove(s_testMetadataFile);
+    }
     void testAutoRestart();
     void testAutoRestartDirectly();
     void testEmergencySave();
+    void testPartialMetadata();
 };
 
 static const char s_logFileName[] = "kcrashtest_log";
@@ -37,7 +48,7 @@ static QByteArray readLogFile()
     return logFile.readAll();
 }
 
-static void startCrasher(const QByteArray &flag, const QByteArray &expectedOutput)
+static void startCrasher(const QByteArray &flag, const QByteArray &expectedOutput, const QHash<QString, QString> &extraEnv = {})
 {
     QFile::remove(QFile::encodeName(s_logFileName));
 
@@ -53,6 +64,9 @@ static void startCrasher(const QByteArray &flag, const QByteArray &expectedOutpu
     // qDebug() << proc.args();
     QProcessEnvironment env = QProcessEnvironment::systemEnvironment();
     env.insert(QStringLiteral("ASAN_OPTIONS"), QStringLiteral("handle_segv=0,poison_heap=0")); // Disable ASAN
+    for (const auto &[key, value] : extraEnv.asKeyValueRange()) {
+        env.insert(key, value);
+    }
     proc.setProcessEnvironment(env);
     proc.setProcessChannelMode(QProcess::ForwardedChannels);
     proc.start(processName, QStringList() << flag);
@@ -74,6 +88,15 @@ static void startCrasher(const QByteArray &flag, const QByteArray &expectedOutpu
 void KCrashTest::testAutoRestart() // use kdeinit if possible, otherwise directly (ex: on CI)
 {
     startCrasher("AR", "starting AR\nautorestarted AR\n");
+
+#if defined(Q_OS_LINUX)
+    // Complete metadata file should have been written
+    QFile testFile(s_testMetadataFile);
+    QVERIFY(testFile.open(QIODevice::ReadOnly));
+    const QByteArray content = testFile.readAll();
+    QVERIFY(content.contains("[KCrash]\n"));
+    QVERIFY(content.contains("[KCrashComplete]\n"));
+#endif
 }
 
 void KCrashTest::testAutoRestartDirectly() // test directly (so a developer can test the CI case)
@@ -84,6 +107,20 @@ void KCrashTest::testAutoRestartDirectly() // test directly (so a developer can 
 void KCrashTest::testEmergencySave()
 {
     startCrasher("ES", "starting ES\nsaveFunction called\n");
+}
+
+void KCrashTest::testPartialMetadata()
+{
+    startCrasher("PartialMetadata", "PartialMetadata\n", {{"KCRASH_CRASH_IN_HANDLER", "1"}});
+
+#if defined(Q_OS_LINUX)
+    // The file should not contain [KCrashComplete] since the crash happened after QApplication destruction
+    QFile testFile(s_testMetadataFile);
+    QVERIFY(testFile.open(QIODevice::ReadOnly));
+    const QByteArray content = testFile.readAll();
+    QVERIFY(content.contains("[KCrash]\n")); // But it should contain the KCrash section
+    QVERIFY(!content.contains("[KCrashComplete]\n"));
+#endif
 }
 
 QTEST_MAIN(KCrashTest)

@@ -118,6 +118,7 @@ static KCrash::CrashFlags s_flags = KCrash::CrashFlags();
 static int s_launchDrKonqi = -1; // -1=initial value 0=disabled 1=enabled
 static int s_originalSignal = -1;
 static QByteArray s_metadataPath;
+static const bool s_crashInHandler = qEnvironmentVariableIntegerValue("KCRASH_CRASH_IN_HANDLER") == 1;
 
 static std::unique_ptr<char[]> s_kcrashErrorMessage;
 
@@ -173,6 +174,9 @@ LONG WINAPI win32UnhandledExceptionFilter(_EXCEPTION_POINTERS *exceptionInfo);
 static bool shouldWriteMetadataToDisk()
 {
 #ifdef Q_OS_LINUX
+    if (QStandardPaths::isTestModeEnabled()) {
+        return true;
+    }
     // NB: The daemon being currently running must not be a condition here. If something crashes during logout
     // the daemon may already be gone but we'll still want to deal with the crash on next login!
     // Similar reasoning applies to not checking the presence of the launcher socket.
@@ -222,11 +226,15 @@ void KCrash::initialize()
         // This data is consumed by DrKonqi in combination with coredumpd metadata.
         const QString metadataDir = QStandardPaths::writableLocation(QStandardPaths::GenericCacheLocation) + QStringLiteral("/kcrash-metadata");
         if (QDir().mkpath(metadataDir)) {
-            const auto bootId = ::bootId();
-            const auto exe = QString::fromUtf8(s_appName.get());
-            const auto pid = QString::number(QCoreApplication::applicationPid());
-            s_metadataPath = QFile::encodeName(metadataDir + //
-                                               QStringLiteral("/%1.%2.%3.ini").arg(exe, bootId, pid));
+            if (QStandardPaths::isTestModeEnabled()) {
+                s_metadataPath = QFile::encodeName(metadataDir + QStringLiteral("/test.ini"));
+            } else {
+                const auto bootId = ::bootId();
+                const auto exe = QString::fromUtf8(s_appName.get());
+                const auto pid = QString::number(QCoreApplication::applicationPid());
+                s_metadataPath = QFile::encodeName(metadataDir + //
+                                                   QStringLiteral("/%1.%2.%3.ini").arg(exe, bootId, pid));
+            }
         }
         if (!s_crashHandler) {
             // Always enable the default handler. We cannot create the metadata ahead of time since we do not know
@@ -595,6 +603,13 @@ void KCrash::defaultCrashHandler(int sig)
         sprintf(threadId, "%d", GetCurrentThreadId());
         data.add("--thread", threadId);
 #endif
+
+        if (s_crashInHandler) {
+#if !defined(Q_OS_WIN)
+            kill(getpid(), SIGSEGV);
+#endif
+            return; // we may continue running a couple ms after the segv. return so we don't close the data!
+        }
 
         data.close();
         const int argc = data.argc;
