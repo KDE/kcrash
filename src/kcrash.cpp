@@ -118,7 +118,7 @@ static KCrash::CrashFlags s_flags = KCrash::CrashFlags();
 static int s_launchDrKonqi = -1; // -1=initial value 0=disabled 1=enabled
 static int s_originalSignal = -1;
 static QByteArray s_metadataPath;
-static const bool s_crashInHandler = qEnvironmentVariableIntegerValue("KCRASH_CRASH_IN_HANDLER") == 1;
+static const bool s_crashInHandler = qEnvironmentVariableIntValue("KCRASH_CRASH_IN_HANDLER") == 1;
 
 static std::unique_ptr<char[]> s_kcrashErrorMessage;
 
