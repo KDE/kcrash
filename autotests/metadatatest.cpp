@@ -44,6 +44,8 @@ private Q_SLOTS:
         QCOMPARE(ini.readLine(), "ABC=FOO\\nBAR\n");
         QCOMPARE(ini.readLine(), "Meow=true\n");
         QCOMPARE(ini.readLine(), "[KCrashComplete]\n");
+        // NOTE: this entry **must** be present for KConfig to recognize the group.
+        QCOMPARE(ini.readLine(), "Complete=1\n");
         QVERIFY(ini.atEnd()); // nothing after final newline
 #endif
     }

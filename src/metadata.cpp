@@ -75,6 +75,13 @@ void MetadataINIWriter::close()
     if (fd >= 0) {
         constexpr std::string_view endGroup = "[KCrashComplete]\n";
         write(fd, endGroup.data(), endGroup.size());
+
+        // KConfig cannot actually deal with empty groups! It ignores them entirely and this behavior is fairly
+        // ingrained. So we write a dummy value to ensure the group is always present.
+        // NOTE: consider this an implementation detail and don't check for it. Only check the group.
+        constexpr std::string_view key = "Complete=1\n";
+        write(fd, key.data(), key.size());
+
         if (::close(fd) == -1) {
             fprintf(stderr, "Failed to close metadata file: %s\n", strerror(errno));
         }
