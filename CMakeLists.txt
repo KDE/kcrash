@@ -62,6 +62,10 @@ ecm_set_disabled_deprecation_versions(
     KF 6.26.0
 )
 
+if(ANDROID)
+    find_package(Gradle REQUIRED)
+endif()
+
 add_subdirectory(src)
 if(BUILD_TESTING)
     add_subdirectory(autotests)

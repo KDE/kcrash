@@ -47,6 +47,9 @@
 #include <QLibraryInfo>
 #include <QStandardPaths>
 #include <QThread>
+#ifdef Q_OS_ANDROID
+#include <QJniObject>
+#endif
 
 #if HAVE_X11
 #include <X11/Xlib.h>
@@ -199,6 +202,7 @@ void KCrash::initialize()
         enableDrKonqi = false;
     }
 
+#ifndef Q_OS_ANDROID
     const QStringList args = QCoreApplication::arguments();
     // Default to core dumping whenever a process is set. When not or when explicitly opting into just in time debugging
     // we enable drkonqi. This causes the signal handler to directly fork drkonqi opening us to race conditions.
@@ -247,6 +251,9 @@ void KCrash::initialize()
             setCrashHandler(defaultCrashHandler);
         }
     } // empty s_metadataPath disables writing
+#else
+    QJniObject::callStaticMethod<void>("org/kde/crash/KCrash", "initialize", QNativeInterface::QAndroidApplication::context());
+#endif
 }
 
 void KCrash::setEmergencySaveFunction(HandlerType saveFunction)

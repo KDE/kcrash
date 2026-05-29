@@ -1,0 +1,9 @@
+<?xml version='1.0' encoding='utf-8'?>
+<!--
+    SPDX-FileCopyrightText: 2026 Volker Krause <vkrause@kde.org>
+    SPDX-License-Identifier: CC0-1.0
+-->
+<resources>
+    <string name="submit_dialog_title">Submit crash report</string>
+    <string name="submit_dialog_text">Do you want to submit an automatic crash report?</string>
+</resources>

@@ -37,6 +37,24 @@ class QString;
  * However, if you are using KApplication, it will by default enable launching
  * DrKonqi on crashes, unless the --nocrashhandler argument was passed on
  * the command line or the environment variable KDE_DEBUG is set to any value.
+ *
+ * Since 6.27 KCrash also supports crash report submissions on Android (API 30+).
+ * For this to work the following Android-specific changes are necessary.
+ *
+ * In \c build.gradle, add \c sentry-android-core as a dependency:
+ * \code
+ * dependencies {
+ *   ...
+ *   implementation 'io.sentry:sentry-android-core:8.43.0'
+ * }
+ * \endcode
+ *
+ * In \c AndroidManifest.xml, add a meta-data entry configuring the Sentry DSN for your application:
+ * \code
+ * <application ...>
+ *     <meta-data android:name="io.sentry.dsn" android:value="https://<token>@crash-reports.kde.org/<app-id>"/>
+ * </application>
+ * \endcode
  */
 namespace KCrash
 {

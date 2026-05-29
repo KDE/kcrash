@@ -1,3 +1,7 @@
+if(ANDROID)
+    add_subdirectory(android)
+endif()
+
 add_library(KF6Crash)
 add_library(KF6::Crash ALIAS KF6Crash)
 
