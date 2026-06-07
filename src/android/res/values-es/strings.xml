@@ -1,0 +1,5 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+  <string name="submit_dialog_title">Enviar informe de fallo</string>
+  <string name="submit_dialog_text">¿Quiere enviar un informe automático del fallo?</string>
+</resources>

@@ -1,0 +1,5 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+  <string name="submit_dialog_title">Надсилання звіту щодо вади</string>
+  <string name="submit_dialog_text">Хочете автоматично надіслати звіт щодо вади?</string>
+</resources>
