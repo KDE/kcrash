@@ -1,0 +1,5 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+  <string name="submit_dialog_title">ავარიის ანგარიშის გაგზავნა</string>
+  <string name="submit_dialog_text">გსურთ ავტომატური ავარიის ანგარიშის გაგზავნა?</string>
+</resources>

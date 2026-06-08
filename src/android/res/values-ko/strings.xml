@@ -1,0 +1,5 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+  <string name="submit_dialog_title">충돌 보고서 보내기</string>
+  <string name="submit_dialog_text">자동 충돌 보고서를 제출하시겠습니까?</string>
+</resources>
