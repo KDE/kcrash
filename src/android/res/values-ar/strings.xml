@@ -1,0 +1,5 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+  <string name="submit_dialog_title">قدّم تقريراً عن انهيار</string>
+  <string name="submit_dialog_text">هل ترغب في تقديم تقرير عن انهيار آليًا؟</string>
+</resources>
