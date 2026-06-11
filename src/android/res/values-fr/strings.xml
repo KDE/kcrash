@@ -1,2 +1,5 @@
 <?xml version='1.0' encoding='utf-8'?>
-<resources/>
+<resources>
+  <string name="submit_dialog_title">Soumettre le rapport de plantage</string>
+  <string name="submit_dialog_text">Voulez-vous envoyer un rapport automatique de plantage ?</string>
+</resources>
