@@ -1,0 +1,5 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+  <string name="submit_dialog_title">Odoslať hlásenie o páde</string>
+  <string name="submit_dialog_text">Chcete odoslať automatické hlásenie o páde?</string>
+</resources>
