@@ -1,0 +1,5 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+  <string name="submit_dialog_title">Invia segnalazione di blocco</string>
+  <string name="submit_dialog_text">Inviare una segnalazione automatica di blocco?</string>
+</resources>
