@@ -1,0 +1,5 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+  <string name="submit_dialog_title">提交崩潰報告</string>
+  <string name="submit_dialog_text">您要提交自動崩潰報告嗎？</string>
+</resources>
