@@ -1,0 +1,5 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+  <string name="submit_dialog_title">Send inn krasjrapport</string>
+  <string name="submit_dialog_text">Vil du senda inn ein automatisk krasjrapport?</string>
+</resources>
