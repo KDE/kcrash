@@ -1,0 +1,5 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+  <string name="submit_dialog_title">Senda villuskýrslu</string>
+  <string name="submit_dialog_text">Viltu senda inn sjálfvirka villuskýrslu?</string>
+</resources>
