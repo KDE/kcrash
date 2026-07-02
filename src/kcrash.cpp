@@ -135,6 +135,10 @@ using DetailsHash = QHash<QByteArray, QByteArray>;
 std::unique_ptr<const DetailsHash> s_tags; // Sentry tags
 std::unique_ptr<const DetailsHash> s_extraData; // Sentry extra data
 std::unique_ptr<const DetailsHash> s_gpuContext; // Sentry gpu context
+std::unique_ptr<char> s_qtPlatform;
+#if HAVE_X11
+std::unique_ptr<char> s_x11Display;
+#endif
 
 QString bootId()
 {
@@ -147,6 +151,38 @@ QString bootId()
     return QString::fromUtf8(file.readAll().simplified().replace('-', QByteArrayView()));
 #else
     return {};
+#endif
+}
+
+void loadPlatformDetails()
+{
+    // This entire function is only relevant for just-in-time debugging (JIT).
+    // When that gets removed this function can be removed as well.
+
+    const auto platformName = QGuiApplication::platformName().toUtf8();
+
+    if (platformName == "wayland-org.kde.kwin.qpa"_ba) {
+        s_qtPlatform.reset(qstrdup("wayland"));
+    } else {
+        s_qtPlatform.reset(qstrdup(platformName.constData()));
+    }
+
+#if HAVE_X11
+    if (platformName == "xcb"_ba) {
+        // start up on the correct display
+        char *display = nullptr;
+        if (qGuiApp) {
+            if (auto disp = qGuiApp->nativeInterface<QNativeInterface::QX11Application>()->display()) {
+                display = XDisplayString(disp);
+            }
+        }
+        if (!display) {
+            display = getenv("DISPLAY");
+        }
+        if (display) {
+            s_x11Display.reset(qstrdup(display));
+        }
+    }
 #endif
 }
 
@@ -220,6 +256,7 @@ void KCrash::initialize()
         const QString path = QCoreApplication::applicationFilePath();
         s_appFilePath.reset(qstrdup(qPrintable(path))); // This intentionally cannot be changed by the application!
         KCrash::setApplicationFilePath(path);
+        loadPlatformDetails();
     } else {
         qWarning() << "This process needs a QCoreApplication instance in order to use KCrash";
     }
@@ -537,28 +574,13 @@ void KCrash::defaultCrashHandler(int sig)
 
         data.add("--kdeframeworksversion", KCRASH_VERSION_STRING);
 
-        const QByteArray platformName = QGuiApplication::platformName().toUtf8();
-        if (!platformName.isEmpty()) {
-            if (strcmp(platformName.constData(), "wayland-org.kde.kwin.qpa") == 0) { // redirect kwin's internal QPA to wayland proper
-                data.add("--platform", "wayland");
-            } else {
-                data.add("--platform", platformName.constData());
-            }
+        if (s_qtPlatform) {
+            data.add("--platform", s_qtPlatform.get());
         }
 
 #if HAVE_X11
-        if (platformName == QByteArrayLiteral("xcb")) {
-            // start up on the correct display
-            char *display = nullptr;
-            if (qGuiApp) {
-                if (auto disp = qGuiApp->nativeInterface<QNativeInterface::QX11Application>()->display()) {
-                    display = XDisplayString(disp);
-                }
-            }
-            if (!display) {
-                display = getenv("DISPLAY");
-            }
-            data.add("--display", display);
+        if (s_x11Display) {
+            data.add("--display", s_x11Display.get());
         }
 #endif
 
