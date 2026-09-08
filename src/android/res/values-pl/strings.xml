@@ -1,0 +1,5 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+  <string name="submit_dialog_title">Zgłoś wysypaną aplikację</string>
+  <string name="submit_dialog_text">Czy chcesz, żeby system sam wysyłał zgłoszenia o wysypanych aplikacjach?</string>
+</resources>
