@@ -68,7 +68,7 @@ if(WITH_X11)
     target_link_libraries(KF6Crash PRIVATE X11::X11)
 endif()
 
-ecm_generate_headers(KCrash_HEADERS
+ecm_generate_headers(KCrash_CamelCase_HEADERS
   HEADER_NAMES
   KCrash
 
@@ -80,6 +80,7 @@ install(TARGETS KF6Crash EXPORT KF6CrashTargets ${KF_INSTALL_TARGETS_DEFAULT_ARG
 install(FILES
   ${CMAKE_CURRENT_BINARY_DIR}/kcrash_export.h
   ${KCrash_HEADERS}
+  ${KCrash_CamelCase_HEADERS}
   DESTINATION ${KDE_INSTALL_INCLUDEDIR_KF}/KCrash COMPONENT Devel
 )
 
@@ -90,3 +91,16 @@ ecm_qt_install_logging_categories(
 )
 
 ecm_generate_qdoc(KF6Crash kcrash.qdocconf)
+
+ecm_add_installed_library_check(KF6Crash
+    PACKAGE_NAME "KF6Crash"
+    PACKAGE_TARGET_NAMESPACE "KF6::"
+)
+
+ecm_installed_library_check_include_strings(KF6Crash
+    HEADERS ${KCrash_CamelCase_HEADERS}
+)
+
+ecm_installed_library_check_version_preprocessor_macros(KF6Crash
+    PREFIX KCRASH
+)
