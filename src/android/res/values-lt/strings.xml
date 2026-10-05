@@ -1,0 +1,5 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+  <string name="submit_dialog_title">Pateikti pranešimą apie strigtį</string>
+  <string name="submit_dialog_text">Ar norite pateikti automatinį pranešimą apie strigtį?</string>
+</resources>
