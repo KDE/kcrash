@@ -4,7 +4,7 @@
     SPDX-FileCopyrightText: 2000 Tom Braun <braunt@fh-konstanz.de>
     SPDX-FileCopyrightText: 2010 George Kiagiadakis <kiagiadakis.george@gmail.com>
     SPDX-FileCopyrightText: 2009 KDE e.V. <kde-ev-board@kde.org>
-    SPDX-FileCopyrightText: 2021 Harald Sitter <sitter@kde.org>
+    SPDX-FileCopyrightText: 2021-2026 Harald Sitter <sitter@kde.org>
     SPDX-FileContributor: 2009 Adriaan de Groot <groot@kde.org>
 
     SPDX-License-Identifier: LGPL-2.0-or-later
@@ -245,7 +245,7 @@ void KCrash::initialize()
     // we enable drkonqi. This causes the signal handler to directly fork drkonqi opening us to race conditions.
     // NOTE: depending on the specific signal other threads are running while the signal handler runs and may trip over
     //   the signal handler's closed FDs. That is primarily why we do not like JIT debugging.
-    if (enableDrKonqi && (!s_coreConfig.isProcess() || qEnvironmentVariableIntValue("KCRASH_JIT_DRKONQI") == 1)) {
+    if (enableDrKonqi && (s_coreConfig.isFile() || qEnvironmentVariableIntValue("KCRASH_JIT_DRKONQI") == 1)) {
         KCrash::setDrKonqiEnabled(true);
     } else {
         // Don't qDebug here, it loads qtlogging.ini very early which prevents unittests from doing QStandardPaths::setTestModeEnabled(true) in initTestCase()
@@ -695,7 +695,7 @@ void KCrash::defaultCrashHandler(int sig)
         fprintf(stderr, "Unable to start Dr. Konqi\n");
     }
 
-    if (s_coreConfig.isProcess()) {
+    if (!s_coreConfig.isFile()) {
         fprintf(stderr, "Re-raising signal for core dump handling.\n");
         KCrash::setCrashHandler(nullptr);
         raise(sig);
@@ -780,7 +780,7 @@ void KCrash::startProcess(int argc, const char *argv[], bool waitAndExit)
             // If the process was started directly, use waitpid(), as it's a child...
             while (waitpid(pid, nullptr, 0) != pid) { }
         }
-        if (!s_coreConfig.isProcess()) {
+        if (s_coreConfig.isFile()) {
             // Only exit if we don't forward to core dumps
             _exit(253);
         }

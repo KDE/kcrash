@@ -1,5 +1,5 @@
 /*
-    SPDX-FileCopyrightText: 2016-2021 Harald Sitter <sitter@kde.org>
+    SPDX-FileCopyrightText: 2016-2026 Harald Sitter <sitter@kde.org>
 
     SPDX-License-Identifier: LGPL-2.0-or-later
 */
@@ -16,13 +16,17 @@ class CoreConfig
 public:
     CoreConfig(const QString &path = QStringLiteral("/proc/sys/kernel/core_pattern"));
 
-    bool isProcess() const;
-    // should this need expansion please refactor to enum. could also store cmdline and compare in kcrash.cpp
-    bool isCoredumpd() const;
+    //! Returns true if the core pattern is a legacy file path (if this is false it could be a socket or a process pattern)
+    [[nodiscard]] bool isFile() const;
+
+    //! Returns true if the core pattern is definitely a systemd-coredump pattern.
+    [[nodiscard]] bool isCoredumpd() const;
+
+    // NOTE: should this need expansion beyond coredumpd please refactor to enum
 
 private:
     bool m_supported = false;
-    bool m_process = false;
+    bool m_isFile = true;
     bool m_coredumpd = false;
 };
 
