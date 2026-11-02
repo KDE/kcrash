@@ -1,0 +1,6 @@
+version = 1
+
+[[annotations]]
+path="autotests/core_patterns/*"
+SPDX-License-Identifier = "CC0-1.0"
+SPDX-FileCopyrightText = "none"
